@@ -6,26 +6,16 @@ PDFs of the open-access sources cited in
 `sources.tsv` lists each file name, citation and source URL. Run `./fetch_papers.sh` to download any
 that are missing; it keeps only files that are real PDFs and reports the rest.
 
-**Status (3 Oct 2026):** 5 of 12 open-access PDFs are stored here, each checked as a real PDF of the
-right paper:
+**Status (3 Oct 2026):** 11 of the 12 open-access sources are stored here. Each one was checked as a real
+PDF of the right paper. File names follow `author-year-short-title.pdf`; `sources.tsv` gives the full citations.
+Five came from `fetch_papers.sh`. Gwilym downloaded six by hand because their hosts block scripted
+downloads: Mantesi 2015, Rodrigues 2016, Gauthier, Johra & Heiselberg 2017, Han 2025 and Jimenez-Bescos 2017.
+The Gauthier year (2017) is inferred from the PDF's creation date.
 
-- Kosny et al. (c.2001), ORNL
-- Reilly & Kinnane (2017), accepted manuscript
-- Verbeke & Audenaert (2018), repository copy
-- Johra, Heiselberg & Le Dréau (2019), accepted manuscript
-- Mora Juarez (2014), Chalmers MSc thesis
-
-Not downloaded, and why:
-
-| Paper | Reason |
-|---|---|
-| Hoes (2012), bouwenmetstaal.nl | File removed: the URL now returns 404. |
-| Mantesi et al. (2015), publications.ibpsa.org | Host serves a captcha page (SiteGround bot check) to scripts. Download by hand in a browser. |
-| Rodrigues, Sougkakis & Gillott (2016), nottingham-repository.worktribe.com | Cloudflare bot check. Download by hand. |
-| Gauthier et al., discovery-pp.ucl.ac.uk | Host returns 403 to scripts; the main discovery.ucl.ac.uk host was blocked by the cloud session's network policy. Download by hand. |
-| Johra & Heiselberg (2017), vbn.aau.dk | Cloudflare bot check. Download by hand (and check it is the 2017 review). |
-| Han et al. (2025), sciencedirect.com | Open access, but ScienceDirect refuses scripted downloads. Use the "View PDF" button. |
-| Jimenez-Bescos (2017), westminsterresearch | The repository record has no attached file. The paper is open access in *Energy Procedia* on ScienceDirect. |
+Still missing: **Hoes (2012)**, the TU/e presentation. Its bouwenmetstaal.nl URL now returns 404. The
+closest published version of this work is Hoes & Hensen (2016), *The potential of lightweight low-energy
+houses with hybrid adaptable thermal storage*, Energy and Buildings 110 (paywalled), or Hoes's TU/e PhD
+thesis.
 
 ## Paywalled sources (not stored)
 
