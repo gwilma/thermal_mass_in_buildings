@@ -6,13 +6,26 @@ PDFs of the open-access sources cited in
 `sources.tsv` lists each file name, citation and source URL. Run `./fetch_papers.sh` to download any
 that are missing; it keeps only files that are real PDFs and reports the rest.
 
-**Status (3 Oct 2026):** the PDFs have not yet been downloaded. The cloud session that
-prepared this folder could not reach the publishers' and repositories' hosts because of its
-network policy. Run the script from a machine with normal internet access (or a session with
-broader network access) and commit the PDFs.
+**Status (3 Oct 2026):** 5 of 12 open-access PDFs are stored here, each checked as a real PDF of the
+right paper:
 
-The landing-page entries (Chalmers, ScienceDirect, Westminster) may save an HTML page instead of a
-PDF. The script reports these as `MISS`; download them by hand from the page.
+- Kosny et al. (c.2001), ORNL
+- Reilly & Kinnane (2017), accepted manuscript
+- Verbeke & Audenaert (2018), repository copy
+- Johra, Heiselberg & Le Dréau (2019), accepted manuscript
+- Mora Juarez (2014), Chalmers MSc thesis
+
+Not downloaded, and why:
+
+| Paper | Reason |
+|---|---|
+| Hoes (2012), bouwenmetstaal.nl | File removed: the URL now returns 404. |
+| Mantesi et al. (2015), publications.ibpsa.org | Host serves a captcha page (SiteGround bot check) to scripts. Download by hand in a browser. |
+| Rodrigues, Sougkakis & Gillott (2016), nottingham-repository.worktribe.com | Cloudflare bot check. Download by hand. |
+| Gauthier et al., discovery-pp.ucl.ac.uk | Host returns 403 to scripts; the main discovery.ucl.ac.uk host was blocked by the cloud session's network policy. Download by hand. |
+| Johra & Heiselberg (2017), vbn.aau.dk | Cloudflare bot check. Download by hand (and check it is the 2017 review). |
+| Han et al. (2025), sciencedirect.com | Open access, but ScienceDirect refuses scripted downloads. Use the "View PDF" button. |
+| Jimenez-Bescos (2017), westminsterresearch | The repository record has no attached file. The paper is open access in *Energy Procedia* on ScienceDirect. |
 
 ## Paywalled sources (not stored)
 
