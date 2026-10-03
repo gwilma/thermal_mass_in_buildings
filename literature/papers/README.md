@@ -17,6 +17,13 @@ closest published version of this work is Hoes & Hensen (2016), *The potential o
 houses with hybrid adaptable thermal storage*, Energy and Buildings 110 (paywalled), or Hoes's TU/e PhD
 thesis.
 
+As a stand-in, this folder has the earlier journal paper on the same work:
+`hoes-2011-low-energy-house-adaptable-thermal-storage.pdf`. This is Hoes, Trcka, Hensen & Hoekstra Bonnema
+(2011), *Energy Conversion and Management* 52(6), accepted manuscript. It uses the same evening and
+day-plus-evening occupancy cases. Its mass levels, however, are 5, 50 and 100 kg/m², not the 15 and 100 kg/m²
+quoted from the 2012 presentation. Fetching it with `fetch_papers.sh` will fail, because the DOI leads to the
+paywalled publisher page.
+
 ## Paywalled sources (not stored)
 
 These are cited in the review but have no open copy we found. Get them through a library:
