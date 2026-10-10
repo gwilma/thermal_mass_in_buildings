@@ -24,6 +24,9 @@ day-plus-evening occupancy cases. Its mass levels, however, are 5, 50 and 100 kg
 quoted from the 2012 presentation. Fetching it with `fetch_papers.sh` will fail, because the DOI leads to the
 paywalled publisher page.
 
+Gwilym later supplied Dominković et al. (2018), the peer-reviewed version from DTU Orbit, as
+`dominkovic-2018-thermal-building-mass-district-heating.pdf`.
+
 ## Paywalled sources (not stored)
 
 These are cited in the review but have no open copy we found. Get them through a library:
@@ -33,5 +36,4 @@ These are cited in the review but have no open copy we found. Get them through a
 - Hacker, De Saulles, Minson & Holmes (2008), *Energy and Buildings* 40(3), 375–384, doi:10.1016/j.enbuild.2007.03.005.
 - Kendrick, Ogden, Wang & Baiche (2012), *Energy and Buildings* 48, 40–49.
 - Kalogirou, Florides & Tassou (2002), *Renewable Energy* 27(3), 353–368.
-- Dominković et al. (2018), *Energy* 153, 949–966.
 - Rodrigues, E. et al. (2019), *Applied Energy* 252.
