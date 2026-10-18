@@ -1,10 +1,13 @@
 """Hourly weather for the room model.
 
+`london(variant)` is the default: Heathrow TMYx 2011-2025 from
+climate.onebuilding.org, with optional hot and 2050s morphs.
+
 `read_epw(path)` reads any EnergyPlus weather file (CIBSE TRY/DSY files
 converted to EPW, Prometheus UKCP18 future files, onebuilding.org TMYx).
 
 `synthetic(variant, seed)` makes a London-like year when no file is to
-hand. It is a stand-in, not a design weather year: monthly means are
+hand (kept as a fallback). It is a stand-in, not a design weather year: monthly means are
 approximately Heathrow 1991-2020, and the stochastic day-to-day variation is
 tuned by eye. Variants:
   "typical"     no heatwave
@@ -16,7 +19,7 @@ tuned by eye. Variants:
 Returns a dict of hourly arrays (8760): T (air C), GHI, DHI, DNI (W/m2),
 and the solar position (cos zenith, azimuth from south, rad).
 """
-import math
+import math, os
 import numpy as np
 
 LAT, LON = 51.48, -0.45  # Heathrow
@@ -126,6 +129,38 @@ def synthetic(variant="typical", seed=1):
     return dict(T=T, GHI=ghi, DHI=dhi, DNI=dni, cosz=cosz, az=az, name=f"synthetic-{variant}")
 
 
+EPW_LONDON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "weather_data",
+                          "GBR_ENG_London-Heathrow.Intl.AP.037720_TMYx.2011-2025.epw")
+HEATWAVE_DAYS = (195, 202)  # 15-21 July, the file's own "week nearest max temperature"
+
+
+def london(variant="typical"):
+    """Heathrow TMYx 2011-2025 (climate.onebuilding.org), optionally morphed:
+      "typical"  the file as is
+      "hot"      +1.5 K Jun-Aug and a +4 K raised-cosine heatwave bump over
+                 15-21 July (peak about 37 C), a DSY-like stress year
+      "hot2050"  "hot" plus +2.5 K Jun-Aug and +1.5 K otherwise, an
+                 illustrative 2050s shift (not a UKCP18 projection)
+    Solar is left as in the file. For design work use CIBSE TRY/DSY or
+    Prometheus UKCP18 files through read_epw()."""
+    w = read_epw(EPW_LONDON)
+    w["name"] = f"london-tmyx-{variant}"
+    if variant in ("hot", "hot2050"):
+        d = np.arange(8760) / 24.0
+        summer = (d >= 151) & (d < 243)
+        a, b = HEATWAVE_DAYS
+        x = np.clip((d - a) / (b - a), 0, 1)
+        bump = np.where((d >= a) & (d < b), 4.0 * 0.5 * (1 - np.cos(2 * np.pi * x)), 0.0)
+        w["T"] = w["T"] + 1.5 * summer + bump
+        if variant == "hot2050":
+            w["T"] = w["T"] + np.where(summer, 2.5, 1.5)
+    return w
+
+
+def get(variant="typical", source="london"):
+    return london(variant) if source == "london" else synthetic(variant)
+
+
 def read_epw(path):
     T, ghi, dni, dhi = [], [], [], []
     with open(path, encoding="latin-1") as fh:
@@ -163,7 +198,7 @@ def running_mean(T, alpha=0.8):
 
 if __name__ == "__main__":
     for v in ("typical", "hot", "hot2050"):
-        w = synthetic(v)
+        w = london(v)
         T = w["T"].reshape(-1, 24)
         mon = np.repeat(np.arange(12), MDAYS)
         print(v, "annual mean %.1f, max %.1f, min %.1f, GHI %.0f kWh/m2" % (w["T"].mean(), w["T"].max(), w["T"].min(), w["GHI"].sum() / 1000))

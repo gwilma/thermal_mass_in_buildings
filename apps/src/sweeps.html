@@ -1,0 +1,166 @@
+<title>Mass Sweeps</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>{{STYLE}}</style>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Thermal mass toolkit · model 4 of 4</div>
+      <h1>Mass Sweeps</h1>
+    </div>
+    <p class="lede">How much exposed mass is worth having, when it needs night ventilation, and how it ranks against glazing, blinds and ventilation. The page opens with the published Python results; rerun any sweep here to check them or try another weather year.</p>
+  </header>
+  <div class="layout">
+    <aside class="panel controls" aria-label="Sweep settings">
+      <div class="field"><label for="src">Showing</label><select id="src"><option value="py">Python results (10 mm mesh)</option><option value="live" disabled>Live results from this page</option></select></div>
+      <div class="field"><label for="dx">Live mesh cell</label><select id="dx"><option value="0.02" selected>20 mm (faster)</option><option value="0.01">10 mm (matches Python)</option></select></div>
+      <div class="field"><label for="r">Morris trajectories <span class="range-out" id="rOut"></span></label><input id="r" type="range" min="4" max="10" step="1" value="6"></div>
+      <div class="row">
+        <button id="runA" type="button" class="ghost">Run A</button><button id="runB" type="button" class="ghost">Run B</button><button id="runM" type="button" class="ghost">Run C</button>
+      </div>
+      <div class="progress" aria-hidden="true"><div id="bar"></div></div>
+      <div class="status" id="status" role="status"></div>
+      <p class="note">Base house: the timber-frame envelope from the House Simulator with an exposed dense layer of thickness t on the ground floor, intermediate floor, partitions (2t) and party wall. t = 0 swaps in plasterboard and chipboard. Weather is Heathrow TMYx; the hot and 2050s years are morphs of it.</p>
+    </aside>
+    <main class="results">
+      <section class="panel">
+        <div class="section-head"><h2>A. Diminishing returns</h2><span class="eyebrow" id="srcA"></span></div>
+        <div class="split">
+          <div><h3>Summer overheating</h3><div class="chart" id="cA1"></div></div>
+          <div><h3>Daily swing and heating</h3><div class="chart" id="cA2"></div><div class="chart" id="cA3"></div></div>
+        </div>
+        <p class="note" id="noteA"></p>
+      </section>
+      <section class="panel">
+        <div class="section-head"><h2>B. Mass × night ventilation</h2><span class="eyebrow" id="srcB"></span></div>
+        <h3>Degree-hours above 26 °C, hot year</h3><div id="hB1"></div>
+        <h3>Night hours above 26 °C, hot year</h3><div id="hB2"></div>
+        <p class="note">Rows are night ventilation rates (air changes per hour, 23–07, windows open only when outdoors is cooler); columns are the exposed layer t in mm. Without night ventilation, extra mass carries daytime heat into the night.</p>
+      </section>
+      <section class="panel">
+        <div class="section-head"><h2>C. What matters most (Morris screening)</h2>
+          <div class="field" style="min-width:220px"><label for="mo">Output</label><select id="mo"><option value="dh26">Degree-hours > 26 °C (hot)</option><option value="tm59b_h">Night hours > 26 °C (hot)</option><option value="heat_kwh_m2">Space heating (typical)</option><option value="heat_peak_kw">Peak heating (typical)</option></select></div></div>
+        <div class="chart" id="cM"></div>
+        <p class="note">μ* is the mean absolute change in the output as each input moves across two thirds of its range, averaged over trajectories through the other inputs. Ranges: <span id="ranges"></span>.</p>
+      </section>
+      <section class="panel">
+        <div class="section-head"><h2>Construction packages</h2><span class="eyebrow">Python, fine mesh, hot year</span></div>
+        <div class="chart" id="cP"></div>
+        <div class="scroll"><table class="data" id="tP"></table></div>
+        <p class="note">The 5R1C column is the simplified one-mass-node model in the Excel workbook. It tracks heating well but keeps only the daily store (κ₁), so it understates what deep mass does over a multi-day heatwave.</p>
+      </section>
+      <div class="footer"><span>Port of models/sweeps.py (gwilma/thermal_mass_in_buildings). Python results computed with 10 mm cells; live runs at 20 mm agree to within about 1%.</span></div>
+    </main>
+  </div>
+</div>
+<script id="wxData" type="text/plain">{{WEATHER}}</script>
+<script id="pyData" type="application/json">{{RESULTS}}</script>
+<script id="coreSrc">{{CORE}}</script>
+<script>{{UI}}</script>
+<script>
+(() => {
+  const { $, esc, fmt } = UI;
+  const PY = JSON.parse($("#pyData").textContent);
+  const wxBase = UI.decodeWeather($("#wxData").textContent);
+  const live = { A: null, B: null, M: null };
+  let busy = false;
+  $("#ranges").textContent = TM.MORRIS_PARAMS.map(([n, lo, hi]) => `${n} ${lo}–${hi}`).join("; ");
+  $("#r").addEventListener("input", () => { $("#rOut").textContent = $("#r").value + " × 9 runs × 2 years"; }); $("#rOut").textContent = $("#r").value + " × 9 runs × 2 years";
+
+  const HANDLER = `
+    let W = null;
+    const metricsFor = (opts, variant) => TM.metrics(new TM.Room(TM.SWEEP_BASE, opts).run(W[variant]));
+    onmessage = ev => {
+      const { kind, dx, r, wx } = ev.data;
+      if (!W) { const b = TM.withSun(wx); W = { typical: TM.morph(b, "typical"), hot: TM.morph(b, "hot"), hot2050: TM.morph(b, "hot2050") }; }
+      if (kind === "A") {
+        const rows = []; let k = 0, tot = TM.T_LIST.length * 5;
+        for (const t of TM.T_LIST) {
+          const ov = TM.massOverrides(t), room = new TM.Room(TM.SWEEP_BASE, { overrides: ov, dx });
+          const [k1, kt] = room.kappaSummary(); const m = TM.metrics(room.run(W.typical));
+          const row = { t, kappa1: k1, kappa_tot: kt, heat: m.heat_kwh_m2, peak: m.heat_peak_kw }; postMessage({ progress: ++k / tot });
+          for (const v of ["hot", "hot2050"]) for (const nv of [false, true]) {
+            const mm = metricsFor({ overrides: TM.massOverrides(t), dx, night_vent: nv }, v), tag = v + "_" + (nv ? "nv" : "day");
+            row[tag + "_dh26"] = mm.dh26; row[tag + "_b"] = mm.tm59b_h; row[tag + "_swing"] = mm.jul_swing; postMessage({ progress: ++k / tot });
+          }
+          rows.push(row);
+        }
+        postMessage({ done: "A", data: rows });
+      } else if (kind === "B") {
+        const t = [0, 0.025, 0.05, 0.1, 0.15, 0.2, 0.3], ach = [0, 0.5, 1, 2, 3, 5];
+        const dh = ach.map(() => []), nb = ach.map(() => []); let k = 0;
+        for (let j = 0; j < t.length; j++) for (let i = 0; i < ach.length; i++) {
+          const m = metricsFor({ overrides: TM.massOverrides(t[j]), dx, night_vent: ach[i] > 0, ach_night: ach[i] }, "hot");
+          dh[i][j] = m.dh26; nb[i][j] = m.tm59b_h; postMessage({ progress: ++k / (t.length * ach.length) });
+        }
+        postMessage({ done: "B", data: { t, ach, dh26: dh, night: nb } });
+      } else {
+        const trajs = TM.morrisDesign(r), outs = ["dh26", "tm59b_h", "heat_kwh_m2", "heat_peak_kw"];
+        const ee = Object.fromEntries(outs.map(o => [o, TM.MORRIS_PARAMS.map(() => [])]));
+        const evalx = x => { const o = TM.morrisRoom(x, { dx }); const mh = TM.metrics(new TM.Room(TM.SWEEP_BASE, o).run(W.hot)); const mt = TM.metrics(new TM.Room(TM.SWEEP_BASE, TM.morrisRoom(x, { dx })).run(W.typical)); return { dh26: mh.dh26, tm59b_h: mh.tm59b_h, heat_kwh_m2: mt.heat_kwh_m2, heat_peak_kw: mt.heat_peak_kw }; };
+        let k = 0; const tot = trajs.length * trajs[0].length;
+        for (const pts of trajs) {
+          let y = evalx(pts[0].x); postMessage({ progress: ++k / tot });
+          for (const p of pts.slice(1)) { const y2 = evalx(p.x); for (const o of outs) ee[o][p.i].push((y2[o] - y[o]) / p.dx); y = y2; postMessage({ progress: ++k / tot }); }
+        }
+        const res = {};
+        for (const o of outs) res[o] = TM.MORRIS_PARAMS.map(([n], i) => { const v = ee[o][i], mu = v.reduce((a, b) => a + b, 0) / v.length; return { name: n, mu_star: v.reduce((a, b) => a + Math.abs(b), 0) / v.length, mu, sigma: Math.sqrt(v.reduce((a, b) => a + (b - mu) ** 2, 0) / v.length) }; });
+        postMessage({ done: "M", data: res });
+      }
+    };`;
+  const worker = UI.makeWorker($("#coreSrc").textContent, HANDLER);
+
+  const data = () => $("#src").value === "live" ? { A: live.A || PY.sweeps.A, B: live.B || PY.sweeps.B, M: live.M || PY.sweeps.morris, live } : { A: PY.sweeps.A, B: PY.sweeps.B, M: PY.sweeps.morris, live: {} };
+
+  function drawA() {
+    const d = data(), A = d.A, C = UI.themeColors(), t = A.map(r => r.t * 1000);
+    $("#srcA").textContent = d.live.A ? "live" : "Python";
+    UI.line($("#cA1"), { xMin: 0, xMax: 300, xLabel: "exposed dense layer t, mm", yLabel: "degree-hours > 26 °C", yZero: true, tipDigits: 0, xFmtTip: v => v + " mm",
+      series: [{ name: "Hot, day purge", x: t, y: A.map(r => r.hot_day_dh26), color: C.heat, dots: true }, { name: "Hot, + night vent", x: t, y: A.map(r => r.hot_nv_dh26), color: C.cool, dots: true }, { name: "2050s, + night vent", x: t, y: A.map(r => r.hot2050_nv_dh26), color: C.mass, dots: true }] });
+    UI.line($("#cA2"), { xMin: 0, xMax: 300, height: 170, yLabel: "July swing, K", yZero: true, xFmtTip: v => v + " mm", tipDigits: 1,
+      series: [{ name: "Day purge", x: t, y: A.map(r => r.hot_day_swing), color: C.heat, dots: true }, { name: "+ night vent", x: t, y: A.map(r => r.hot_nv_swing), color: C.cool, dots: true }] });
+    UI.line($("#cA3"), { xMin: 0, xMax: 300, height: 170, xLabel: "exposed dense layer t, mm", yLabel: "kWh/m² · kW", yZero: true, xFmtTip: v => v + " mm", tipDigits: 2,
+      series: [{ name: "Heating kWh/m² (typical)", x: t, y: A.map(r => r.heat), color: C.fg, dots: true }, { name: "Peak kW", x: t, y: A.map(r => r.peak), color: C.heat, dots: true, dash: true }] });
+    const a0 = A[0], a100 = A.find(r => Math.abs(r.t - 0.1) < 1e-9), a300 = A[A.length - 1];
+    $("#noteA").textContent = `From 0 to 100 mm the July daily swing falls from ${fmt(a0.hot_nv_swing, 1)} K to ${fmt(a100.hot_nv_swing, 1)} K and then flattens, which is the daily penetration depth at work. Degree-hours keep falling to 300 mm (${fmt(a0.hot_nv_dh26, 0)} → ${fmt(a100.hot_nv_dh26, 0)} → ${fmt(a300.hot_nv_dh26, 0)} with night ventilation) because a week-long heatwave reaches deeper mass. Heating changes by ${fmt(a100.heat - a0.heat, 1)} kWh/m² and peak heating by ${fmt(a100.peak - a0.peak, 2)} kW by 100 mm.`;
+  }
+  function drawB() {
+    const d = data(), B = d.B;
+    $("#srcB").textContent = d.live.B ? "live" : "Python";
+    const cols = B.t.map(t => String(Math.round(t * 1000))), rows = B.ach.map(a => a + " ACH");
+    UI.heat($("#hB1"), { rows, cols, Z: B.dh26, rowTitle: "night vent", colTitle: "t mm" });
+    UI.heat($("#hB2"), { rows, cols, Z: B.night, rowTitle: "night vent", colTitle: "t mm", color: "--cool" });
+  }
+  function drawM() {
+    const d = data(), o = $("#mo").value, rows = d.M[o].slice().sort((a, b) => b.mu_star - a.mu_star), C = UI.themeColors();
+    UI.hbar($("#cM"), { labels: rows.map(r => r.name), series: [{ name: "μ*", values: rows.map(r => r.mu_star), color: C.heat }, { name: "σ (interaction / non-linearity)", values: rows.map(r => r.sigma), color: C.muted }], labelWidth: 190, valueLabels: true, digits: o.startsWith("heat") ? 1 : 0, xLabel: { dh26: "K·h", tm59b_h: "hours", heat_kwh_m2: "kWh/m²", heat_peak_kw: "kW" }[o] });
+  }
+  function drawP() {
+    const fd = PY.packages.filter(p => p.mode === "fd").sort((a, b) => b.kappa1 - a.kappa1), C = UI.themeColors();
+    UI.hbar($("#cP"), { labels: fd.map(p => p.package), labelWidth: 300, xLabel: "degree-hours > 26 °C, May–Sep (hot year)",
+      series: [{ name: "Day purge only", values: fd.map(p => p.hot_day_dh26), color: C.heat }, { name: "+ night ventilation", values: fd.map(p => p.hot_nv_dh26), color: C.cool }] });
+    $("#tP").innerHTML = `<thead><tr><th class="l">Package</th><th>κ₁</th><th>H W/K</th><th>Heat kWh/m²</th><th>5R1C</th><th>Peak kW</th><th>DH26 +nv</th><th>5R1C</th><th>Five-node</th><th>Night h +nv</th></tr></thead><tbody>` +
+      fd.map(p => { const q = PY.packages.find(r => r.mode === "5node" && r.package === p.package); return `<tr><td class="l">${esc(p.package)}</td><td>${fmt(p.kappa1, 0)}</td><td>${fmt(p.H_fabric, 0)}</td><td>${fmt(p.heat_kwh_m2, 1)}</td><td>${fmt(p.r5_heat, 1)}</td><td>${fmt(p.heat_peak_kw, 2)}</td><td>${fmt(p.hot_nv_dh26, 0)}</td><td>${fmt(p.r5_nv_dh26, 0)}</td><td>${fmt(q.hot_nv_dh26, 0)}</td><td>${fmt(p.hot_nv_tm59b_h, 0)}</td></tr>`; }).join("") + "</tbody>";
+  }
+  const drawAll = () => { drawA(); drawB(); drawM(); drawP(); };
+
+  function start(kind) {
+    if (busy || !worker) { if (!worker) $("#status").textContent = "This browser blocked background workers, so live runs are unavailable."; return; }
+    busy = true; UI.$$("#runA,#runB,#runM").forEach(b => b.disabled = true);
+    const t0 = performance.now(), names = { A: "Sweep A (45 runs)", B: "Sweep B (42 runs)", M: `Morris (${+$("#r").value * 18} runs)` };
+    $("#status").textContent = `Running ${names[kind]}…`;
+    worker.onmessage = ev => {
+      if (ev.data.progress !== undefined) { $("#bar").style.width = Math.round(ev.data.progress * 100) + "%"; return; }
+      live[ev.data.done] = ev.data.data; busy = false; UI.$$("#runA,#runB,#runM").forEach(b => b.disabled = false);
+      $("#src").options[1].disabled = false; $("#src").value = "live";
+      $("#status").textContent = `${names[kind]} finished in ${fmt((performance.now() - t0) / 1000, 0)} s.`; drawAll();
+    };
+    worker.onerror = e => { busy = false; UI.$$("#runA,#runB,#runM").forEach(b => b.disabled = false); $("#status").textContent = "The sweep stopped: " + e.message; };
+    worker.postMessage({ kind, dx: +$("#dx").value, r: +$("#r").value, wx: wxBase });
+  }
+  $("#runA").onclick = () => start("A"); $("#runB").onclick = () => start("B"); $("#runM").onclick = () => start("M");
+  $("#src").onchange = drawAll; $("#mo").onchange = drawM;
+  drawAll(); UI.onTheme(drawAll);
+})();
+</script>

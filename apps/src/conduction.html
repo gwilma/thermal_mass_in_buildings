@@ -1,0 +1,158 @@
+<title>Conduction Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>{{STYLE}}</style>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Thermal mass toolkit · model 2 of 4</div>
+      <h1>Conduction Lab</h1>
+    </div>
+    <p class="lede">Drive one element with a hot-day room temperature and watch heat soak in. A fine finite-difference mesh is the reference; the ISO 52016 / HEM five-node lump runs alongside so you can see where it gains or loses storage.</p>
+  </header>
+  <div class="layout">
+    <aside class="panel controls" aria-label="Test set-up">
+      <div class="field"><label for="el">Element</label><select id="el"></select></div>
+      <div class="row">
+        <div class="field"><label for="cls">Five-node class</label><select id="cls"><option value="auto">Library rule</option><option>I</option><option>E</option><option>IE</option><option>D</option><option>M</option></select></div>
+        <div class="field"><label for="dx">Mesh cell</label><select id="dx"><option value="0.02">20 mm</option><option value="0.01">10 mm</option><option value="0.005">5 mm</option><option value="0.002" selected>2 mm</option></select></div>
+      </div>
+      <span class="lbl">Room air temperature (sinusoid)</span>
+      <div class="row">
+        <div class="field"><label for="mean">Mean °C</label><input id="mean" type="number" step="0.5" value="24"></div>
+        <div class="field"><label for="amp">Amplitude K</label><input id="amp" type="number" step="0.5" min="0" value="4"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="peak">Peak hour</label><input id="peak" type="number" step="1" min="0" max="23" value="16"></div>
+        <div class="field"><label for="far">Far side °C</label><input id="far" type="number" step="0.5" value="15"></div>
+      </div>
+      <div class="field"><label for="hour">Profile at hour <span class="range-out" id="hourOut"></span></label><input id="hour" type="range" min="0" max="23" step="1" value="16"></div>
+      <p class="note">Runs four days with 5-minute implicit steps and reports the last day. Outdoor-facing elements see the far-side temperature through R<sub>se</sub>; internal elements see it directly or through R<sub>si</sub>.</p>
+    </aside>
+    <main class="results">
+      <section class="panel">
+        <div class="section-head"><h2 id="title">–</h2><span class="eyebrow" id="sub"></span></div>
+        <div class="tiles" id="tiles"></div>
+      </section>
+      <section class="panel">
+        <h3>Heat flux into the surface, last day</h3>
+        <div class="chart" id="cFlux"></div>
+        <p class="note">Positive is heat going into the element. The shaded band is 09:00 to 18:00, the window used for "absorbed".</p>
+      </section>
+      <section class="split">
+        <div class="panel">
+          <h3>Temperature through the element</h3>
+          <div class="chart" id="cProf"></div>
+          <p class="note">Fine mesh: the line is the chosen hour; dashed lines are the day's highest and lowest temperature at each depth, so the gap between them shows how deep the daily wave reaches. Dots are the five-node temperatures, placed by resistance.</p>
+        </div>
+        <div class="panel">
+          <h3>Mesh convergence, 24 h admittance</h3>
+          <div class="scroll"><table class="data" id="tMesh"></table></div>
+          <p class="note">The fine mesh converges on the ISO 13786 closed form, which is why it can stand as the reference here.</p>
+        </div>
+      </section>
+      <div class="footer"><span>Port of models/elements.py and models/conduction.py (gwilma/thermal_mass_in_buildings). Material values are typical design values.</span></div>
+    </main>
+  </div>
+</div>
+<script>{{CORE}}</script>
+<script>{{UI}}</script>
+<script>
+(() => {
+  const { $, esc, fmt } = UI;
+  const sel = $("#el");
+  sel.innerHTML = TM.LIB_LIST.map(e => `<option value="${e.key}">${e.key} · ${esc(e.name)}</option>`).join("");
+  sel.value = UI.store.get("cl.key", "W2") in TM.LIB ? UI.store.get("cl.key", "W2") : "W2";
+  const DT = 300, DAYS = 4, PER = 86400 / DT;
+  let last = null;
+
+  function positions(e, mode, dx) {
+    // node positions (mm from the room surface) matching the chain construction
+    if (mode === "fd") {
+      const xs = [0]; let x = 0;
+      const push = (n, h) => { for (let i = 0; i < n; i++) { x += h; xs.push(x); } };
+      for (const l of e.layers) { if (l.length === 2) push(1, 0); else { const n = Math.max(1, Math.ceil(l[1] / dx - 1e-9)); push(n, l[1] / n * 1000); } }
+      if (e.back === "ground") push(20, 50);
+      return xs;
+    }
+    // five-node: nodes sit at resistance shares 0, 1/6, 1/2, 5/6, 1 of Rc; map each to a depth
+    const pts = [[0, 0]]; let R = 0, x = 0;
+    for (const l of e.layers) { if (l.length === 2) R += l[1]; else { R += l[1] / l[2]; x += l[1] * 1000; } pts.push([R, x]); }
+    const D = x;
+    const depth = f => { const r = f * R; for (let i = 1; i < pts.length; i++) if (r <= pts[i][0] + 1e-12) { const [r0, x0] = pts[i - 1], [r1, x1] = pts[i]; return r1 > r0 ? x0 + (r - r0) / (r1 - r0) * (x1 - x0) : x1; } return D; };
+    const pos = [0, 1 / 6, 1 / 2, 5 / 6, 1].map(depth);
+    if (e.back === "ground") for (let i = 1; i <= 20; i++) pos.push(D + 50 * i);
+    return pos;
+  }
+
+  function run() {
+    const e = TM.LIB[sel.value], clsSel = $("#cls").value, cls = clsSel === "auto" ? e.cls : clsSel, dx = +$("#dx").value;
+    UI.store.set("cl.key", e.key);
+    const mean = +$("#mean").value, amp = +$("#amp").value, pk = +$("#peak").value, far = +$("#far").value;
+    const n = DAYS * PER, Tr = new Float64Array(n);
+    for (let i = 0; i < n; i++) Tr[i] = mean + amp * Math.cos(2 * Math.PI * ((i * DT) / 3600 - pk) / 24);
+    const fd = TM.stepResponse(e, Tr, DT, "fd", dx, null, far, 12);
+    const f5 = TM.stepResponse(e, Tr, DT, "5node", 0.005, cls, far, 12);
+    last = { e, cls, dx, Tr, fd, f5, far };
+    $("#title").textContent = e.name;
+    $("#sub").textContent = `${e.key} · ${fd.chain.n} mesh nodes · five-node class ${cls}`;
+    const s0 = n - PER, hrs = [], qf = [], q5 = [], tr = [];
+    let aF = 0, a5 = 0, pF = -1e9, p5 = -1e9, tF = 0, t5 = 0;
+    for (let i = s0; i < n; i++) {
+      const h = ((i - s0) * DT) / 3600; hrs.push(h); qf.push(fd.q[i]); q5.push(f5.q[i]); tr.push(Tr[i]);
+      if (h >= 9 && h < 18) { aF += fd.q[i] * DT / 3.6e6; a5 += f5.q[i] * DT / 3.6e6; }
+      if (fd.q[i] > pF) { pF = fd.q[i]; tF = h; } if (f5.q[i] > p5) { p5 = f5.q[i]; t5 = h; }
+    }
+    const iso = e.iso();
+    $("#tiles").innerHTML = [
+      ["Absorbed 09–18, fine mesh", fmt(aF * 1000, 0), "Wh/m²"],
+      ["Absorbed 09–18, five-node", fmt(a5 * 1000, 0), `Wh/m², ${fmt(a5 / aF, 2)} × mesh`],
+      ["ISO 13786 |Y|", fmt(iso.Y, 2), `W/m²K, κ₁ ${fmt(iso.kappa1, 0)} kJ/m²K`],
+      ["Peak flux, fine mesh", fmt(pF, 1), `W/m² at ${fmt(tF, 1)} h`],
+      ["Peak flux, five-node", fmt(p5, 1), `W/m² at ${fmt(t5, 1)} h`],
+      ["Room swing", `±${fmt(amp, 1)}`, `K about ${fmt(mean, 1)} °C, peak ${pk}:00`],
+    ].map(([k, v, u]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="u">${u}</span></div>`).join("");
+    const C = UI.themeColors();
+    UI.line($("#cFlux"), {
+      xMin: 0, xMax: 24, xTickVals: [0, 3, 6, 9, 12, 15, 18, 21, 24], xLabel: "hour of day", yLabel: "W/m²", xFmtTip: v => `${String(Math.floor(v)).padStart(2, "0")}:${String(Math.round((v % 1) * 60)).padStart(2, "0")}`,
+      series: [{ name: "Fine mesh", x: hrs, y: qf, color: C.fg, width: 2.2 }, { name: `Five-node ${cls}`, x: hrs, y: q5, color: C.heat }],
+      bands: [{ x0: 9, x1: 18, color: C.heat, opacity: 0.07 }], hlines: [{ y: 0, color: C.muted }],
+    });
+    // mesh table
+    const rows = [0.02, 0.01, 0.005, 0.002].map(d => { const y = TM.admittance(e, "fd", d).Y; return [d, TM.chain(e, "fd", d).n, y, (y / iso.Y - 1) * 100]; });
+    $("#tMesh").innerHTML = `<thead><tr><th class="l">Cell size</th><th>Nodes</th><th>|Y| W/m²K</th><th>vs ISO</th></tr></thead><tbody>` +
+      rows.map(([d, nn, y, er]) => `<tr${d === dx ? ' class="sel"' : ""}><td class="l">${d * 1000} mm</td><td>${nn}</td><td>${fmt(y, 3)}</td><td>${er >= 0 ? "+" : ""}${fmt(er, 2)}%</td></tr>`).join("") +
+      `<tr><td class="l">ISO 13786</td><td>–</td><td>${fmt(iso.Y, 3)}</td><td>0</td></tr><tr><td class="l">Five-node ${cls}</td><td>5</td><td>${fmt(TM.admittance(e, "5node", 0.005, cls).Y, 3)}</td><td>${fmt((TM.admittance(e, "5node", 0.005, cls).Y / iso.Y - 1) * 100, 0)}%</td></tr></tbody>`;
+    profile();
+  }
+
+  function profile() {
+    if (!last) return;
+    const { e, cls, dx, fd, f5 } = last, hr = +$("#hour").value;
+    $("#hourOut").textContent = `${String(hr).padStart(2, "0")}:00`;
+    const P = fd.profiles, k0 = P.length - 24, xs = positions(e, "fd", dx);
+    const lim = e.back === "ground" ? xs.length : xs.length; // soil included for ground floors
+    const cur = P[k0 + hr], lo = xs.map((_, j) => Math.min(...P.slice(k0).map(p => p[j]))), hi = xs.map((_, j) => Math.max(...P.slice(k0).map(p => p[j])));
+    const p5 = f5.profiles[k0 + hr], x5 = positions(e, "5node", dx);
+    const C = UI.themeColors();
+    const xmax = e.back === "ground" ? Math.min(xs[xs.length - 1], xs[xs.length - 21] + 300) : xs[xs.length - 1];
+    const keep = xs.map((x, j) => x <= xmax ? j : -1).filter(j => j >= 0);
+    UI.line($("#cProf"), {
+      xMin: 0, xMax: xmax, xLabel: "depth from room surface, mm", yLabel: "°C", tipDigits: 2, xFmtTip: v => fmt(v, 1) + " mm",
+      series: [
+        { name: `${String(hr).padStart(2, "0")}:00`, x: keep.map(j => xs[j]), y: keep.map(j => cur[j]), color: C.heat, width: 2.2 },
+        { name: "daily max", x: keep.map(j => xs[j]), y: keep.map(j => hi[j]), color: C.muted, dash: true, width: 1.2 },
+        { name: "daily min", x: keep.map(j => xs[j]), y: keep.map(j => lo[j]), color: C.cool, dash: true, width: 1.2 },
+        { name: `five-node ${cls}`, x: x5.filter(x => x <= xmax), y: x5.filter(x => x <= xmax).map((_, j) => p5[j]), color: C.fg, width: 0.01, dots: true },
+      ],
+    });
+  }
+
+  ["#el", "#cls", "#dx", "#mean", "#amp", "#peak", "#far"].forEach(s => $(s).addEventListener("change", run));
+  sel.addEventListener("change", () => { const e = TM.LIB[sel.value]; $("#far").value = e.back === "ext" ? 15 : 24; run(); });
+  $("#hour").addEventListener("input", profile);
+  run();
+  UI.onTheme(run);
+})();
+</script>

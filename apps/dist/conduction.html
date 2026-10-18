@@ -1,0 +1,1046 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Conduction Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>/* Thermal mass toolkit. Layout: instrument-panel controls on the left,
+   results on the right; stacks to one column on phones. */
+:root {
+  --bg: #f3f4f1;          /* limewash paper */
+  --panel: #ffffff;
+  --fg: #1b2124;          /* graphite */
+  --muted: #5a6569;
+  --line: #d6dbd8;
+  --heat: #c4501a;        /* afternoon peak */
+  --cool: #1f6e9c;        /* night air */
+  --mass: #7a6a58;        /* concrete and earth */
+  --ok: #2f7d4f;
+  --warn: #b7791f;
+  --bad: #b3261e;
+  --field: #f8f9f7;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121719; --panel: #1a2023; --fg: #e4e9ea; --muted: #98a3a7; --line: #2c3539;
+    --heat: #f0874e; --cool: #63aedc; --mass: #b9a68f; --ok: #5cbf86; --warn: #e0a84a; --bad: #f07167;
+    --field: #151b1d; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121719; --panel: #1a2023; --fg: #e4e9ea; --muted: #98a3a7; --line: #2c3539;
+  --heat: #f0874e; --cool: #63aedc; --mass: #b9a68f; --ok: #5cbf86; --warn: #e0a84a; --bad: #f07167;
+  --field: #151b1d; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 4vw, 36px); line-height: 1.1; margin: 4px 0 0; letter-spacing: -.01em; text-wrap: balance; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 18px; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--font-display); font-weight: 600; font-size: 15px; margin: 0; }
+p { margin: 0; max-width: 70ch; }
+.lede { color: var(--muted); max-width: 72ch; }
+.layout { display: grid; grid-template-columns: minmax(260px, 330px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.controls { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+@media (max-width: 860px) { .controls { position: static; } }
+.results { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field > label, .lbl { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .02em; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+.row > .field { flex: 1 1 120px; min-width: 0; }
+select, input[type="number"], input[type="text"] {
+  font: inherit; font-size: 14px; color: var(--fg); background: var(--field); border: 1px solid var(--line);
+  border-radius: 4px; padding: 7px 8px; width: 100%; min-width: 0;
+}
+input[type="range"] { width: 100%; accent-color: var(--heat); }
+.range-out { font-family: var(--font-data); font-size: 12px; color: var(--fg); }
+select:focus-visible, input:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--cool); outline-offset: 2px; }
+button {
+  font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 4px; padding: 8px 14px;
+  border: 1px solid var(--fg); background: var(--fg); color: var(--panel);
+}
+button.ghost { background: transparent; color: var(--fg); border-color: var(--line); font-weight: 500; }
+button:disabled { opacity: .5; cursor: progress; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tiles.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 560px) { .tiles, .tiles.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; background: var(--panel); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile .k { font-size: 12px; color: var(--muted); }
+.tile .v { font-family: var(--font-data); font-size: 22px; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.tile .u { font-size: 12px; color: var(--muted); }
+.tile .d { font-family: var(--font-data); font-size: 12px; }
+.chip { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; border: 1px solid currentColor; letter-spacing: .03em; }
+.chip.ok { color: var(--ok); } .chip.bad { color: var(--bad); } .chip.warn { color: var(--warn); }
+.note { font-size: 13px; color: var(--muted); max-width: 80ch; }
+.scroll { overflow-x: auto; min-width: 0; }
+table.data { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.data th, table.data td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+table.data th:first-child, table.data td:first-child, table.data td.l, table.data th.l { text-align: left; }
+table.data td.wrap { white-space: normal; min-width: 220px; text-align: left; }
+table.data th { font-size: 12px; color: var(--muted); font-weight: 600; position: sticky; top: 0; background: var(--panel); }
+table.data td { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+table.data td.l, table.data td.wrap { font-family: var(--font-body); }
+table.data tr.sel td { background: color-mix(in srgb, var(--heat) 10%, transparent); }
+table.data tbody tr { cursor: default; }
+.chart { width: 100%; min-width: 0; position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { fill: var(--muted); font-family: var(--font-data); font-size: 11px; }
+.chart .axis { stroke: var(--line); }
+.chart .grid { stroke: var(--line); stroke-dasharray: 2 3; opacity: .7; }
+.chart .ttl { fill: var(--fg); font-family: var(--font-body); font-size: 12px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; font-family: var(--font-data); font-size: 12px; color: var(--fg); white-space: nowrap; box-shadow: 0 2px 8px rgb(0 0 0 / .12); }
+.progress { height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.progress > div { height: 100%; width: 0; background: var(--heat); transition: width .2s; }
+.status { font-size: 13px; color: var(--muted); min-height: 1.4em; }
+.split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 20px; }
+details > summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+.section-head { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; justify-content: space-between; }
+.layers { display: flex; flex-direction: column; gap: 6px; }
+.layer { display: grid; grid-template-columns: minmax(0, 1fr) 84px 30px; gap: 6px; align-items: center; }
+.layer button { padding: 4px 0; }
+.section-bar { display: flex; height: 54px; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.section-bar > div { height: 100%; position: relative; min-width: 2px; }
+.footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 4px; }
+kbd, code { font-family: var(--font-data); font-size: .92em; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Thermal mass toolkit · model 2 of 4</div>
+      <h1>Conduction Lab</h1>
+    </div>
+    <p class="lede">Drive one element with a hot-day room temperature and watch heat soak in. A fine finite-difference mesh is the reference; the ISO 52016 / HEM five-node lump runs alongside so you can see where it gains or loses storage.</p>
+  </header>
+  <div class="layout">
+    <aside class="panel controls" aria-label="Test set-up">
+      <div class="field"><label for="el">Element</label><select id="el"></select></div>
+      <div class="row">
+        <div class="field"><label for="cls">Five-node class</label><select id="cls"><option value="auto">Library rule</option><option>I</option><option>E</option><option>IE</option><option>D</option><option>M</option></select></div>
+        <div class="field"><label for="dx">Mesh cell</label><select id="dx"><option value="0.02">20 mm</option><option value="0.01">10 mm</option><option value="0.005">5 mm</option><option value="0.002" selected>2 mm</option></select></div>
+      </div>
+      <span class="lbl">Room air temperature (sinusoid)</span>
+      <div class="row">
+        <div class="field"><label for="mean">Mean °C</label><input id="mean" type="number" step="0.5" value="24"></div>
+        <div class="field"><label for="amp">Amplitude K</label><input id="amp" type="number" step="0.5" min="0" value="4"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="peak">Peak hour</label><input id="peak" type="number" step="1" min="0" max="23" value="16"></div>
+        <div class="field"><label for="far">Far side °C</label><input id="far" type="number" step="0.5" value="15"></div>
+      </div>
+      <div class="field"><label for="hour">Profile at hour <span class="range-out" id="hourOut"></span></label><input id="hour" type="range" min="0" max="23" step="1" value="16"></div>
+      <p class="note">Runs four days with 5-minute implicit steps and reports the last day. Outdoor-facing elements see the far-side temperature through R<sub>se</sub>; internal elements see it directly or through R<sub>si</sub>.</p>
+    </aside>
+    <main class="results">
+      <section class="panel">
+        <div class="section-head"><h2 id="title">–</h2><span class="eyebrow" id="sub"></span></div>
+        <div class="tiles" id="tiles"></div>
+      </section>
+      <section class="panel">
+        <h3>Heat flux into the surface, last day</h3>
+        <div class="chart" id="cFlux"></div>
+        <p class="note">Positive is heat going into the element. The shaded band is 09:00 to 18:00, the window used for "absorbed".</p>
+      </section>
+      <section class="split">
+        <div class="panel">
+          <h3>Temperature through the element</h3>
+          <div class="chart" id="cProf"></div>
+          <p class="note">Fine mesh: the line is the chosen hour; dashed lines are the day's highest and lowest temperature at each depth, so the gap between them shows how deep the daily wave reaches. Dots are the five-node temperatures, placed by resistance.</p>
+        </div>
+        <div class="panel">
+          <h3>Mesh convergence, 24 h admittance</h3>
+          <div class="scroll"><table class="data" id="tMesh"></table></div>
+          <p class="note">The fine mesh converges on the ISO 13786 closed form, which is why it can stand as the reference here.</p>
+        </div>
+      </section>
+      <div class="footer"><span>Port of models/elements.py and models/conduction.py (gwilma/thermal_mass_in_buildings). Material values are typical design values.</span></div>
+    </main>
+  </div>
+</div>
+<script>// Thermal mass models: JavaScript port of models/*.py (build-up library,
+// ISO 13786, five-node and fine-mesh element chains, single-zone room model,
+// 5R1C, metrics, sweeps). Works in a page or a Web Worker; no dependencies.
+"use strict";
+const TM = (() => {
+  const DAY = 86400;
+
+  // ---- materials and build-up library (models/buildups.py) -----------------
+  const MAT = {
+    "dense concrete": [2.0, 2400, 1000], "precast plank": [1.6, 2200, 1000], "screed": [1.15, 2000, 1000],
+    "brick": [0.77, 1700, 800], "dense block": [1.13, 2000, 1000], "medium block": [0.51, 1400, 1000],
+    "aerated block": [0.15, 600, 1000], "gypsum plaster": [0.5, 1300, 1000], "lime plaster": [0.7, 1600, 1000],
+    "render": [0.8, 1800, 1000], "plasterboard": [0.21, 700, 1000], "CLT": [0.13, 470, 1600],
+    "OSB": [0.13, 650, 1700], "chipboard": [0.14, 650, 1700], "timber": [0.13, 500, 1600],
+    "mineral wool": [0.035, 30, 1030], "mineral wool + studs": [0.040, 60, 1200], "PIR": [0.022, 30, 1400],
+    "EPS": [0.032, 20, 1450], "wood fibre": [0.038, 160, 2100], "hempcrete": [0.07, 330, 1500],
+    "rammed earth": [1.0, 1900, 900], "carpet + underlay": [0.06, 200, 1300], "clay soil": [1.5, 1500, 2000],
+  };
+  const AIR_CAVITY = 0.18, DAB_VOID = 0.10, SERVICE_VOID = 0.17;
+  const L = (name, d) => [name, d, ...MAT[name]];
+  const R = (name, r) => [name, r];
+  const isMass = l => l.length === 5;
+
+  function massClass(layers) {
+    const caps = layers.map(l => isMass(l) ? l[3] * l[4] * l[1] : 0);
+    const ins = [];
+    layers.forEach((l, i) => { if (isMass(l) && l[2] < 0.08 && l[1] > 0.04) ins.push(i); });
+    const tot = caps.reduce((a, b) => a + b, 0) || 1;
+    if (!ins.length) return "D";
+    const first = ins[0], last = ins[ins.length - 1];
+    let inner = 0, outer = 0, middle = 0;
+    caps.forEach((c, i) => {
+      if (i < first) inner += c; else if (i > last) outer += c; else if (!ins.includes(i)) middle += c;
+    });
+    inner /= tot; outer /= tot; middle /= tot;
+    if (middle >= 0.5) return "M";
+    if (inner >= 0.5 && outer < 0.2) return "I";
+    if (outer >= 0.5 && inner < 0.2) return "E";
+    if (inner >= 0.2 && outer >= 0.2) return "IE";
+    return "D";
+  }
+
+  class Element {
+    constructor(key, name, kind, layers, back, opts = {}) {
+      this.key = key; this.name = name; this.kind = kind; this.layers = layers; this.back = back;
+      this.rsi = opts.rsi ?? ({ floor: 0.17, ceiling: 0.10 }[kind] ?? 0.13);
+      this.rse = back === "ext" ? (opts.rse ?? 0.04) : 0.0;
+      this.cls = opts.cls || massClass(layers);
+    }
+    get kappaTot() { return this.layers.filter(isMass).reduce((a, l) => a + l[3] * l[4] * l[1], 0) / 1000; }
+    iso(period = DAY) {
+      let layers = this.layers.slice(), rse = this.rse;
+      if (this.back === "adiabatic") { layers.push(R("adiabatic", 1e6)); rse = 0; }
+      else if (this.back === "room") rse = this.rsi;
+      else if (this.back === "ground") { layers.push(L("clay soil", 1.0)); rse = 0; }
+      return characterise(layers, this.rsi, rse, period);
+    }
+  }
+
+  const E = (k, n, kind, layers, back, o) => new Element(k, n, kind, layers, back, o);
+  const LIB_LIST = [
+    E("W1", "Cavity: wet plaster, 100 dense block, 150 MW, brick", "wall", [L("gypsum plaster", .013), L("dense block", .1), L("mineral wool", .15), L("brick", .102)], "ext"),
+    E("W2", "Cavity: board on dabs, 100 dense block, 150 MW, brick", "wall", [L("plasterboard", .0125), R("dab void", DAB_VOID), L("dense block", .1), L("mineral wool", .15), L("brick", .102)], "ext"),
+    E("W3", "Cavity: wet plaster, 100 aircrete, 150 MW, brick", "wall", [L("gypsum plaster", .013), L("aerated block", .1), L("mineral wool", .15), L("brick", .102)], "ext"),
+    E("W4", "Cavity: board on dabs, 100 aircrete, 150 MW, brick", "wall", [L("plasterboard", .0125), R("dab void", DAB_VOID), L("aerated block", .1), L("mineral wool", .15), L("brick", .102)], "ext"),
+    E("W5", "Timber frame: board, 140 MW studs, OSB, cavity, brick", "wall", [L("plasterboard", .0125), L("mineral wool + studs", .14), L("OSB", .009), R("cavity", AIR_CAVITY), L("brick", .102)], "ext"),
+    E("W6", "Timber frame: board, 140 MW studs, 60 wood fibre, render", "wall", [L("plasterboard", .0125), L("mineral wool + studs", .14), L("wood fibre", .06), L("render", .01)], "ext"),
+    E("W7", "SIPs: board, OSB, 142 PUR, OSB, ventilated cladding", "wall", [L("plasterboard", .0125), R("service void", SERVICE_VOID), L("OSB", .015), L("PIR", .142), L("OSB", .015)], "ext"),
+    E("W8", "Exposed 100 CLT, 160 wood fibre, render", "wall", [L("CLT", .1), L("wood fibre", .16), L("render", .01)], "ext"),
+    E("W9", "Lined CLT: board, 100 CLT, 160 MW, cladding", "wall", [L("plasterboard", .0125), R("service void", SERVICE_VOID), L("CLT", .1), L("mineral wool", .16)], "ext"),
+    E("W10", "ICF: board on dabs, 70 EPS, 150 concrete, 70 EPS, render", "wall", [L("plasterboard", .0125), R("dab void", DAB_VOID), L("EPS", .07), L("dense concrete", .15), L("EPS", .07), L("render", .01)], "ext"),
+    E("W11", "Solid 215 brick, wet plaster, uninsulated", "wall", [L("gypsum plaster", .013), L("brick", .215)], "ext"),
+    E("W12", "Solid brick + IWI: board, 80 PIR, 215 brick", "wall", [L("plasterboard", .0125), L("PIR", .08), L("brick", .215)], "ext"),
+    E("W13", "Solid brick + EWI: plaster, 215 brick, 100 EPS, render", "wall", [L("gypsum plaster", .013), L("brick", .215), L("EPS", .1), L("render", .01)], "ext"),
+    E("W14", "Hempcrete: lime plaster, 300 hempcrete, lime render", "wall", [L("lime plaster", .015), L("hempcrete", .3), L("render", .015)], "ext"),
+    E("W15", "Exposed 300 rammed earth, 120 wood fibre, render", "wall", [L("rammed earth", .3), L("wood fibre", .12), L("render", .01)], "ext"),
+    E("F1", "65 screed on 100 PIR on slab", "floor", [L("screed", .065), L("PIR", .1), L("dense concrete", .1)], "ground"),
+    E("F2", "Suspended timber: 22 chipboard, 150 MW, vented void", "floor", [L("chipboard", .022), L("mineral wool + studs", .15)], "ext"),
+    E("F3", "Exposed 150 slab (polished) on 120 PIR", "floor", [L("dense concrete", .15), L("PIR", .12)], "ground"),
+    E("F4", "Carpet on 65 screed on 100 PIR on slab", "floor", [L("carpet + underlay", .012), L("screed", .065), L("PIR", .1), L("dense concrete", .1)], "ground"),
+    E("I1", "Timber joist: 22 chipboard, void, 12.5 board ceiling", "floor", [L("chipboard", .022), R("joist void", AIR_CAVITY), L("plasterboard", .0125)], "room"),
+    E("I2", "Concrete: 50 screed, 150 plank, exposed soffit", "floor", [L("screed", .05), L("precast plank", .15)], "room"),
+    E("I3", "Exposed 160 CLT floor, 50 screed on top", "floor", [L("screed", .05), L("CLT", .16)], "room"),
+    E("P1", "Stud partition: 12.5 board each side (half)", "partition", [L("plasterboard", .0125), R("half void", AIR_CAVITY / 2)], "adiabatic"),
+    E("P2", "100 dense block, wet plaster both sides (half)", "partition", [L("gypsum plaster", .013), L("dense block", .05)], "adiabatic"),
+    E("P3", "100 aircrete, wet plaster both sides (half)", "partition", [L("gypsum plaster", .013), L("aerated block", .05)], "adiabatic"),
+    E("P4", "Party wall: plaster, 100 dense block leaf (cavity behind)", "partition", [L("gypsum plaster", .013), L("dense block", .1)], "adiabatic"),
+    E("P5", "Party wall: board, 90 MW studs (timber frame twin stud)", "partition", [L("plasterboard", .025), L("mineral wool + studs", .09)], "adiabatic"),
+    E("R1", "12.5 board ceiling under 300 MW (cold loft)", "ceiling", [L("plasterboard", .0125), L("mineral wool", .3)], "ext"),
+    E("R2", "Exposed 200 concrete roof slab, 150 PIR", "ceiling", [L("dense concrete", .2), L("PIR", .15)], "ext"),
+  ];
+  const LIB = Object.fromEntries(LIB_LIST.map(e => [e.key, e]));
+
+  // ---- complex numbers and ISO 13786 (physics/iso13786.py) -----------------
+  const C = (re, im = 0) => [re, im];
+  const cadd = (a, b) => [a[0] + b[0], a[1] + b[1]];
+  const csub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+  const cmul = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+  const cdiv = (a, b) => { const d = b[0] * b[0] + b[1] * b[1]; return [(a[0] * b[0] + a[1] * b[1]) / d, (a[1] * b[0] - a[0] * b[1]) / d]; };
+  const cabs = a => Math.hypot(a[0], a[1]);
+  const carg = a => Math.atan2(a[1], a[0]);
+
+  function layerMatrix(d, lam, rho, c, period) {
+    const delta = Math.sqrt(lam * period / (Math.PI * rho * c)), x = d / delta;
+    const ch = Math.cosh(x), sh = Math.sinh(x), co = Math.cos(x), si = Math.sin(x);
+    const z11 = C(ch * co, sh * si);
+    const k12 = -delta / (2 * lam), k21 = -lam / delta;
+    const z12 = C(k12 * (sh * co + ch * si), k12 * (ch * si - sh * co));
+    const z21 = C(k21 * (sh * co - ch * si), k21 * (sh * co + ch * si));
+    return [[z11, z12], [z21, z11]];
+  }
+  const resMatrix = r => [[C(1), C(-r)], [C(0), C(1)]];
+  const mmul = (a, b) => [
+    [cadd(cmul(a[0][0], b[0][0]), cmul(a[0][1], b[1][0])), cadd(cmul(a[0][0], b[0][1]), cmul(a[0][1], b[1][1]))],
+    [cadd(cmul(a[1][0], b[0][0]), cmul(a[1][1], b[1][0])), cadd(cmul(a[1][0], b[0][1]), cmul(a[1][1], b[1][1]))]];
+
+  function characterise(layers, rsi = 0.13, rse = 0.04, period = DAY) {
+    let Z = resMatrix(rsi), Rt = rsi + rse, kap = 0;
+    for (const l of layers) {
+      if (!isMass(l)) { Z = mmul(resMatrix(l[1]), Z); Rt += l[1]; }
+      else { const [, d, lam, rho, c] = l; Z = mmul(layerMatrix(d, lam, rho, c, period), Z); Rt += d / lam; kap += rho * c * d; }
+    }
+    Z = mmul(resMatrix(rse), Z);
+    const U = 1 / Rt;
+    const Y11 = cdiv(C(-Z[0][0][0], -Z[0][0][1]), Z[0][1]);
+    const Y12 = cdiv(C(-1), Z[0][1]);
+    const k1 = period / (2 * Math.PI) * cabs(cdiv(csub(Z[0][0], C(1)), Z[0][1]));
+    const lead = y => period / (2 * Math.PI) * carg(y) / 3600;
+    const lag = ((-lead(Y12)) % 24 + 24) % 24;
+    return { U, Y: cabs(Y11), Y_lead_h: lead(Y11), f: cabs(Y12) / U, lag_h: lag, kappa1: k1 / 1000, total_C: kap / 1000 };
+  }
+
+  function libRow(e) {
+    const r = e.iso();
+    return { key: e.key, name: e.name, kind: e.kind, back: e.back, cls: e.cls,
+      U: (e.back === "ext" || e.back === "ground") ? r.U : NaN, Y: r.Y, Y_lead_h: r.Y_lead_h,
+      f: e.back === "ext" ? r.f : NaN, lag_h: e.back === "ext" ? r.lag_h : NaN, kappa1: r.kappa1, kappa_tot: e.kappaTot };
+  }
+
+  // ---- element node chains (models/elements.py) ---------------------------
+  const CLASSES = { I: [0, 0, 0, 0, 1], E: [1, 0, 0, 0, 0], IE: [.5, 0, 0, 0, .5], D: [1 / 8, 1 / 4, 1 / 4, 1 / 4, 1 / 8], M: [0, 0, 1, 0, 0] };
+
+  function fdCells(layers, dx) {
+    const cells = [];
+    for (const l of layers) {
+      if (!isMass(l)) { cells.push([1 / l[1], 0]); continue; }
+      const [, d, lam, rho, c] = l;
+      const n = Math.max(1, Math.ceil(d / dx - 1e-9)), h = d / n;
+      for (let i = 0; i < n; i++) cells.push([lam / h, rho * c * h]);
+    }
+    return cells;
+  }
+  function cellsToChain(cells) {
+    const Cn = new Array(cells.length + 1).fill(0);
+    cells.forEach(([, cap], k) => { Cn[k] += cap / 2; Cn[k + 1] += cap / 2; });
+    return [Cn, cells.map(c => c[0])];
+  }
+  const soilCells = () => fdCells([L("clay soil", 1.0)], 0.05);
+
+  function chain(el, mode = "fd", dx = 0.005, cls = null, rse = null) {
+    rse = rse ?? el.rse;
+    let Cn, g;
+    if (mode === "fd") {
+      let cells = fdCells(el.layers, dx);
+      if (el.back === "ground") cells = cells.concat(soilCells());
+      [Cn, g] = cellsToChain(cells);
+    } else {
+      const Rc = el.layers.reduce((a, l) => a + (isMass(l) ? l[1] / l[2] : l[1]), 0);
+      const kap = el.layers.filter(isMass).reduce((a, l) => a + l[3] * l[4] * l[1], 0);
+      const frac = CLASSES[cls || el.cls].slice().reverse();
+      Cn = frac.map(f => f * kap); g = [6 / Rc, 3 / Rc, 3 / Rc, 6 / Rc];
+      if (el.back === "ground") {
+        const [Cs, gs] = cellsToChain(soilCells());
+        Cn = Cn.slice(0, -1).concat([Cn[4] + Cs[0]], Cs.slice(1)); g = g.concat(gs);
+      }
+    }
+    const backG = el.back === "ext" ? (rse > 0 ? 1 / rse : 1e6) : el.back === "ground" ? 1e6 : 0;
+    return { C: Cn, g, backG, n: Cn.length };
+  }
+
+  // Complex tridiagonal solve (Thomas) for the chain admittance.
+  function admittance(el, mode = "fd", dx = 0.005, cls = null, period = DAY) {
+    const ch = chain(el, mode, dx, cls), n = ch.n, w = 2 * Math.PI / period;
+    const a = [], b = [], c = [], d = [];
+    for (let k = 0; k < n; k++) {
+      let diag = 0;
+      if (k > 0) diag += ch.g[k - 1];
+      if (k < n - 1) diag += ch.g[k];
+      if (k === n - 1) diag += ch.backG + (el.back === "room" ? 1 / el.rsi : 0);
+      if (k === 0) diag += 1 / el.rsi;
+      b.push(C(diag, w * ch.C[k])); a.push(C(k > 0 ? -ch.g[k - 1] : 0)); c.push(C(k < n - 1 ? -ch.g[k] : 0));
+      d.push(C(k === 0 ? 1 / el.rsi : 0));
+    }
+    for (let k = 1; k < n; k++) {
+      const m = cdiv(a[k], b[k - 1]);
+      b[k] = csub(b[k], cmul(m, c[k - 1])); d[k] = csub(d[k], cmul(m, d[k - 1]));
+    }
+    const x = new Array(n); x[n - 1] = cdiv(d[n - 1], b[n - 1]);
+    for (let k = n - 2; k >= 0; k--) x[k] = cdiv(csub(d[k], cmul(c[k], x[k + 1])), b[k]);
+    const Y = cdiv(csub(C(1), x[0]), C(el.rsi));
+    return { Y: cabs(Y), lead_h: carg(Y) * 180 / Math.PI / 15 * period / DAY };
+  }
+
+  // Implicit Euler, tridiagonal: heat flux into the surface (W/m2) for a room
+  // air temperature series via Rsi, far side at Tback. Also returns profiles.
+  function stepResponse(el, Troom, dt, mode = "fd", dx = 0.005, cls = null, Tback = 0, keepEvery = 0) {
+    const ch = chain(el, mode, dx, cls), n = ch.n;
+    const lo = new Float64Array(n), di = new Float64Array(n), up = new Float64Array(n);
+    for (let k = 0; k < n; k++) {
+      di[k] = ch.C[k] / dt + (k > 0 ? ch.g[k - 1] : 0) + (k < n - 1 ? ch.g[k] : 0);
+      if (k > 0) lo[k] = -ch.g[k - 1];
+      if (k < n - 1) up[k] = -ch.g[k];
+    }
+    di[0] += 1 / el.rsi;
+    di[n - 1] += ch.backG + (el.back === "room" ? 1 / el.rsi : 0);
+    // pre-factorise (Thomas)
+    const cp = new Float64Array(n), den = new Float64Array(n);
+    den[0] = di[0]; cp[0] = up[0] / den[0];
+    for (let k = 1; k < n; k++) { den[k] = di[k] - lo[k] * cp[k - 1]; cp[k] = up[k] / den[k]; }
+    let th = new Float64Array(n).fill(Tback);
+    const q = new Float64Array(Troom.length), dp = new Float64Array(n), profiles = [];
+    for (let i = 0; i < Troom.length; i++) {
+      for (let k = 0; k < n; k++) {
+        let rhs = ch.C[k] / dt * th[k];
+        if (k === 0) rhs += Troom[i] / el.rsi;
+        if (k === n - 1) rhs += ch.backG * Tback + (el.back === "room" ? Tback / el.rsi : 0);
+        dp[k] = (rhs - (k > 0 ? lo[k] * dp[k - 1] : 0)) / den[k];
+      }
+      th[n - 1] = dp[n - 1];
+      for (let k = n - 2; k >= 0; k--) th[k] = dp[k] - cp[k] * th[k + 1];
+      q[i] = (Troom[i] - th[0]) / el.rsi;
+      if (keepEvery && i % keepEvery === 0) profiles.push(Float64Array.from(th));
+    }
+    return { q, profiles, chain: ch };
+  }
+
+  // ---- weather (models/weather.py) ----------------------------------------
+  let LAT = 51.4792, LON = -0.4506;
+  function solarPosition(hours) {
+    const n = hours.length, cosz = new Float64Array(n), az = new Float64Array(n);
+    const lat = LAT * Math.PI / 180;
+    for (let i = 0; i < n; i++) {
+      const h = hours[i], doy = Math.floor(h / 24) + 1;
+      const B = 2 * Math.PI * (doy - 81) / 364;
+      const decl = 23.45 * Math.PI / 180 * Math.sin(2 * Math.PI * (284 + doy) / 365);
+      const eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+      const st = (h % 24) + (4 * LON + eot) / 60;
+      const ha = 15 * (st - 12) * Math.PI / 180;
+      const cz = Math.sin(lat) * Math.sin(decl) + Math.cos(lat) * Math.cos(decl) * Math.cos(ha);
+      const sz = Math.sqrt(Math.min(Math.max(1 - cz * cz, 0), 1));
+      let ca = (Math.sin(decl) - cz * Math.sin(lat)) / (sz * Math.cos(lat) + 1e-12);
+      let azn = Math.acos(Math.min(Math.max(ca, -1), 1));
+      if (ha > 0) azn = 2 * Math.PI - azn;
+      cosz[i] = cz; az[i] = azn - Math.PI;
+    }
+    return { cosz, az };
+  }
+
+  function parseEpw(text) {
+    const lines = text.split(/\r?\n/);
+    const hdr = lines[0].split(",");
+    const T = new Float64Array(8760), GHI = new Float64Array(8760), DNI = new Float64Array(8760), DHI = new Float64Array(8760);
+    let i = 0;
+    for (let k = 8; k < lines.length && i < 8760; k++) {
+      const p = lines[k].split(",");
+      if (p.length < 16) continue;
+      T[i] = +p[6]; GHI[i] = +p[13]; DNI[i] = +p[14]; DHI[i] = +p[15]; i++;
+    }
+    if (i < 8760) throw new Error(`The file has ${i} hourly rows; an EPW year needs 8760.`);
+    return { T, GHI, DNI, DHI, lat: +hdr[6], lon: +hdr[7], name: `${hdr[1]} (${hdr[4] || "EPW"})` };
+  }
+
+  function withSun(w) {
+    LAT = w.lat ?? LAT; LON = w.lon ?? LON;
+    const hours = new Float64Array(8760).map((_, i) => i + 0.5);
+    const s = solarPosition(hours);
+    return Object.assign({}, w, s);
+  }
+
+  const HEATWAVE_DAYS = [195, 202];
+  function morph(w, variant) {
+    const T = Float64Array.from(w.T);
+    if (variant === "hot" || variant === "hot2050") {
+      const [a, b] = HEATWAVE_DAYS;
+      for (let i = 0; i < 8760; i++) {
+        const d = i / 24, summer = d >= 151 && d < 243;
+        const x = Math.min(Math.max((d - a) / (b - a), 0), 1);
+        const bump = d >= a && d < b ? 4 * 0.5 * (1 - Math.cos(2 * Math.PI * x)) : 0;
+        T[i] += (summer ? 1.5 : 0) + bump;
+        if (variant === "hot2050") T[i] += summer ? 2.5 : 1.5;
+      }
+    }
+    return Object.assign({}, w, { T, variant });
+  }
+
+  function planeIrradiance(w, tiltDeg, azDeg, albedo = 0.2) {
+    const b = tiltDeg * Math.PI / 180, g = azDeg * Math.PI / 180, out = new Float64Array(8760);
+    for (let i = 0; i < 8760; i++) {
+      const cz = w.cosz[i], sz = Math.sqrt(Math.min(Math.max(1 - cz * cz, 0), 1));
+      const ci = cz * Math.cos(b) + sz * Math.sin(b) * Math.cos(w.az[i] - g);
+      const beam = cz > 0 ? w.DNI[i] * Math.max(ci, 0) : 0;
+      out[i] = beam + w.DHI[i] * (1 + Math.cos(b)) / 2 + w.GHI[i] * albedo * (1 - Math.cos(b)) / 2;
+    }
+    return out;
+  }
+
+  function runningMean(T, alpha = 0.8) {
+    const nd = T.length / 24, Td = new Float64Array(nd);
+    for (let d = 0; d < nd; d++) { let s = 0; for (let h = 0; h < 24; h++) s += T[d * 24 + h]; Td[d] = s / 24; }
+    const trm = new Float64Array(nd); trm[0] = Td[0];
+    for (let d = 1; d < nd; d++) trm[d] = (1 - alpha) * Td[d - 1] + alpha * trm[d - 1];
+    const out = new Float64Array(T.length);
+    for (let i = 0; i < T.length; i++) out[i] = trm[Math.floor(i / 24)];
+    return out;
+  }
+
+  // ---- room model (models/room.py) -----------------------------------------
+  const HR = 5.13, H_E = 25.0, ALPHA_SOLAR = 0.6;
+  const PACKAGES = {
+    "Timber frame, suspended timber floor": { wall: "W5", ground: "F2", inter: "I1", part: "P1", party: "P5", ceil: "R1" },
+    "Timber frame, screed ground floor": { wall: "W5", ground: "F1", inter: "I1", part: "P1", party: "P5", ceil: "R1" },
+    "SIPs, screed ground floor": { wall: "W7", ground: "F1", inter: "I1", part: "P1", party: "P5", ceil: "R1" },
+    "Lined CLT, CLT floor": { wall: "W9", ground: "F1", inter: "I3", part: "P1", party: "P5", ceil: "R1" },
+    "Exposed CLT, CLT floor": { wall: "W8", ground: "F1", inter: "I3", part: "P1", party: "P5", ceil: "R1" },
+    "Masonry (aircrete, dabs), stud partitions": { wall: "W4", ground: "F1", inter: "I1", part: "P1", party: "P4", ceil: "R1" },
+    "Masonry (dense block, dabs), stud partitions": { wall: "W2", ground: "F1", inter: "I1", part: "P1", party: "P4", ceil: "R1" },
+    "Masonry (dense block, wet plaster), block partitions": { wall: "W1", ground: "F1", inter: "I1", part: "P2", party: "P4", ceil: "R1" },
+    "Heavyweight: dense masonry, exposed slab floors": { wall: "W1", ground: "F3", inter: "I2", part: "P2", party: "P4", ceil: "R1" },
+    "ICF, screed ground floor": { wall: "W10", ground: "F1", inter: "I1", part: "P1", party: "P4", ceil: "R1" },
+    "Hempcrete, screed ground floor": { wall: "W14", ground: "F1", inter: "I1", part: "P1", party: "P4", ceil: "R1" },
+    "Solid brick, uninsulated": { wall: "W11", ground: "F2", inter: "I1", part: "P2", party: "P4", ceil: "R1" },
+    "Solid brick + internal insulation": { wall: "W12", ground: "F2", inter: "I1", part: "P2", party: "P4", ceil: "R1" },
+    "Solid brick + external insulation": { wall: "W13", ground: "F2", inter: "I1", part: "P2", party: "P4", ceil: "R1" },
+  };
+  const DEFAULTS = {
+    floor_area: 90, storey_h: 2.4, wall_h: 5.2, width: 6.0, depth: 7.5,
+    win: { S: 10, N: 6, E: 2 }, front: "S", U_win: 1.4, g_win: 0.6, frame: 0.25, shade: 1.0,
+    ach_base: 0.5, ach_day: 3.0, ach_night: 2.0, night_vent: false, t_open: 22.0,
+    partition_area: 60, gains_scale: 1.0, t_set: 21, t_setback: 16, q_max: 6000,
+    mode: "fd", dx: 0.01, dt: 900, overrides: null,
+  };
+  const ORIENT_AZ = { S: 0, W: 90, N: 180, E: -90 };
+  const GAINS_PROFILE = [...Array(7).fill(250), 400, 400, ...Array(9).fill(150), ...Array(5).fill(600), 250];
+
+  function invert(A, n) {
+    const M = new Float64Array(n * 2 * n);
+    for (let i = 0; i < n; i++) { for (let j = 0; j < n; j++) M[i * 2 * n + j] = A[i * n + j]; M[i * 2 * n + n + i] = 1; }
+    const w = 2 * n;
+    for (let c = 0; c < n; c++) {
+      let p = c, best = Math.abs(M[c * w + c]);
+      for (let r = c + 1; r < n; r++) { const v = Math.abs(M[r * w + c]); if (v > best) { best = v; p = r; } }
+      if (p !== c) for (let j = 0; j < w; j++) { const t = M[c * w + j]; M[c * w + j] = M[p * w + j]; M[p * w + j] = t; }
+      const inv = 1 / M[c * w + c];
+      for (let j = 0; j < w; j++) M[c * w + j] *= inv;
+      for (let r = 0; r < n; r++) {
+        if (r === c) continue;
+        const f = M[r * w + c]; if (f === 0) continue;
+        for (let j = 0; j < w; j++) M[r * w + j] -= f * M[c * w + j];
+      }
+    }
+    const out = new Float64Array(n * n);
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) out[i * n + j] = M[i * w + n + j];
+    return out;
+  }
+
+  class Room {
+    constructor(pkg, kw = {}) {
+      const p = Object.assign({}, DEFAULTS, kw); this.p = p;
+      const pk = typeof pkg === "string" ? PACKAGES[pkg] : pkg;
+      const ov = p.overrides || {};
+      const el = role => ov[role] || LIB[pk[role]];
+      const Afl = p.floor_area / 2;
+      const rot = { S: ["S", "N", "E"], N: ["N", "S", "W"], E: ["E", "W", "S"], W: ["W", "E", "N"] }[p.front];
+      const gross = { [rot[0]]: p.width * p.wall_h, [rot[1]]: p.width * p.wall_h, [rot[2]]: p.depth * p.wall_h };
+      const win = {}; ["S", "N", "E"].forEach((o, i) => { win[rot[i]] = p.win[o]; });
+      this.windows = win;
+      const groups = Object.keys(gross).map(o => ["wall", el("wall"), gross[o] - win[o], "single", o]);
+      groups.push(["ground", el("ground"), Afl, "single", null], ["inter", el("inter"), Afl, "both", null],
+        ["part", el("part"), 2 * p.partition_area, "single", null], ["party", el("party"), p.depth * p.wall_h, "single", null],
+        ["ceil", el("ceil"), Afl, "single", null]);
+      this.groups = groups;
+      let n = 2; const chains = [], off = [];
+      for (const [, e] of groups) { const ch = chain(e, p.mode, p.dx); chains.push(ch); off.push(n); n += ch.n; }
+      this.n = n; this.chains = chains; this.off = off;
+      const Cv = new Float64Array(n), G = new Float64Array(n * n);
+      Cv[0] = 10e3 * p.floor_area;
+      const couple = (i, j, h) => { G[i * n + i] += h; G[j * n + j] += h; G[i * n + j] -= h; G[j * n + i] -= h; };
+      this.surf = []; this.backSrc = [];
+      groups.forEach(([role, e, A, face], gi) => {
+        const ch = chains[gi], k0 = off[gi];
+        for (let k = 0; k < ch.n; k++) Cv[k0 + k] += A * ch.C[k];
+        for (let k = 0; k < ch.n - 1; k++) couple(k0 + k, k0 + k + 1, A * ch.g[k]);
+        const faces = [[k0, e.rsi, role === "ground" || role === "inter"]];
+        if (face === "both") faces.push([k0 + ch.n - 1, 0.10, false]);
+        for (const [k, rsi, floorTop] of faces) {
+          const hc = Math.max(1 / rsi - HR, 0.5);
+          couple(k, 0, hc * A); couple(k, 1, HR * A);
+          this.surf.push([k, A, floorTop]);
+        }
+        if (ch.backG > 0) { const kb = k0 + ch.n - 1; G[kb * n + kb] += A * ch.backG; this.backSrc.push([kb, A * ch.backG, gi]); }
+      });
+      this.H_win = p.U_win * Object.values(win).reduce((a, b) => a + b, 0);
+      G[0] += this.H_win;
+      this.V = p.floor_area * p.storey_h;
+      this.C = Cv; this.G = G; this._inv = new Map();
+    }
+    _system(ach) {
+      if (!this._inv.has(ach)) {
+        const n = this.n, A = Float64Array.from(this.G);
+        for (let i = 0; i < n; i++) A[i * n + i] += this.C[i] / this.p.dt;
+        A[0] += 0.33 * ach * this.V;
+        const Ainv = invert(A, n), u = new Float64Array(n);
+        for (let i = 0; i < n; i++) u[i] = Ainv[i * n];
+        this._inv.set(ach, [Ainv, u]);
+      }
+      return this._inv.get(ach);
+    }
+    inputs(w) {
+      const p = this.p;
+      const irr = {}; for (const o of "SNEW") irr[o] = planeIrradiance(w, 90, ORIENT_AZ[o]);
+      const qSol = new Float64Array(8760);
+      for (const [o, Aw] of Object.entries(this.windows))
+        for (let h = 0; h < 8760; h++) qSol[h] += Aw * (1 - p.frame) * p.g_win * (irr[o][h] > 150 ? p.shade : 1) * irr[o][h];
+      const qInt = new Float64Array(8760).map((_, h) => GAINS_PROFILE[h % 24] * p.gains_scale);
+      let Tm = 0; for (let h = 0; h < 8760; h++) Tm += w.T[h]; Tm /= 8760;
+      return { irr, qSol, qInt, Tground: Tm };
+    }
+    run(w, onProgress) {
+      const p = this.p, n = this.n, T_out = w.T;
+      const { irr, qSol, qInt, Tground } = this.inputs(w);
+      const nb = this.backSrc.length;
+      const backT = this.backSrc.map(([, , gi]) => {
+        const [role, e, , , o] = this.groups[gi];
+        if (e.back === "ground") return new Float64Array(8760).fill(Tground);
+        if (role === "wall") return new Float64Array(8760).map((_, h) => T_out[h] + ALPHA_SOLAR * irr[o][h] / H_E);
+        return T_out;
+      });
+      const sA = this.surf.reduce((a, s) => a + s[1], 0), fA = this.surf.reduce((a, s) => a + (s[2] ? s[1] : 0), 0);
+      const solSplit = this.surf.map(s => 0.6 * (s[2] ? s[1] / fA : 0) + 0.4 * s[1] / sA);
+      const radSplit = this.surf.map(s => s[1] / sA);
+      const dt = p.dt, sub = Math.round(3600 / dt);
+      let x = new Float64Array(n).fill(18), x0 = new Float64Array(n);
+      const rhs = new Float64Array(n), src = new Float64Array(n), Cdt = this.C.map(c => c / dt);
+      const out = { T_air: new Float64Array(8760), T_op: new Float64Array(8760), T_mrt: new Float64Array(8760), Q_heat: new Float64Array(8760), ach: new Float64Array(8760) };
+      let Topp = 20, Tap = 20;
+      for (let h = 0; h < 8760; h++) {
+        const hod = h % 24;
+        const tset = ((hod >= 7 && hod < 9) || (hod >= 16 && hod < 23)) ? p.t_set : p.t_setback;
+        const want = Topp > p.t_open && T_out[h] < Tap;
+        let ach = p.ach_base;
+        if (want && hod >= 7 && hod < 23) ach += p.ach_day; else if (want && p.night_vent) ach += p.ach_night;
+        const [Ainv, u] = this._system(ach);
+        src.fill(0);
+        src[0] = this.H_win * T_out[h] + 0.33 * ach * this.V * T_out[h] + 0.5 * qInt[h];
+        for (let b = 0; b < nb; b++) src[this.backSrc[b][0]] += this.backSrc[b][1] * backT[b][h];
+        this.surf.forEach((s, i) => { src[s[0]] += solSplit[i] * qSol[h] + radSplit[i] * 0.5 * qInt[h]; });
+        let a0 = 0, a1 = 0, a2 = 0, a3 = 0;
+        for (let s = 0; s < sub; s++) {
+          for (let i = 0; i < n; i++) rhs[i] = Cdt[i] * x[i] + src[i];
+          for (let i = 0; i < n; i++) { let acc = 0; const r = i * n; for (let j = 0; j < n; j++) acc += Ainv[r + j] * rhs[j]; x0[i] = acc; }
+          const Q = Math.min(Math.max((tset - x0[0]) / u[0], 0), p.q_max);
+          for (let i = 0; i < n; i++) x[i] = x0[i] + Q * u[i];
+          a0 += x[0]; a1 += 0.5 * (x[0] + x[1]); a2 += x[1]; a3 += Q;
+        }
+        out.T_air[h] = a0 / sub; out.T_op[h] = a1 / sub; out.T_mrt[h] = a2 / sub; out.Q_heat[h] = a3 / sub; out.ach[h] = ach;
+        Tap = out.T_air[h]; Topp = out.T_op[h];
+        if (onProgress && h % 730 === 0) onProgress(h / 8760);
+      }
+      out.T_out = T_out;
+      return out;
+    }
+    kappaSummary() {
+      let k1 = 0, kt = 0;
+      for (const [, e, A, face] of this.groups) { k1 += e.iso().kappa1 * A * (face === "both" ? 2 : 1); kt += e.kappaTot * A; }
+      return [k1 / this.p.floor_area, kt / this.p.floor_area];
+    }
+    fabricH() {
+      let H = this.H_win;
+      for (const [, e, A] of this.groups) if (e.back === "ext" || e.back === "ground") H += e.iso().U * A;
+      return H;
+    }
+  }
+
+  // ---- 5R1C (models/room5r1c.py) -------------------------------------------
+  const R_SE = 0.04;
+  function params5r1c(room) {
+    const p = room.p, Af = p.floor_area, At = 4.5 * Af;
+    let k1A = 0, k1sqA = 0, Hout = 0, Hg = 0; const opaqueSol = { S: 0, N: 0, E: 0, W: 0 };
+    for (const [role, e, A, face, o] of room.groups) {
+      const r = e.iso(), mult = face === "both" ? 2 : 1;
+      k1A += r.kappa1 * 1000 * A * mult; k1sqA += (r.kappa1 * 1000) ** 2 * A * mult;
+      if (e.back === "ext") { Hout += r.U * A; if (role === "wall") opaqueSol[o] += ALPHA_SOLAR * R_SE * r.U * A; }
+      else if (e.back === "ground") Hg += r.U * A;
+    }
+    const Cm = k1A, Am = Cm * Cm / k1sqA;
+    return { Af, At, Cm, Am, H_is: 3.45 * At, H_ms: 9.1 * Am, H_w: room.H_win, H_op: Hout + Hg, H_out: Hout, H_g: Hg, opaqueSol, V: room.V };
+  }
+  function run5r1c(room, w) {
+    const p = room.p, q = params5r1c(room);
+    const { H_ms, H_is, H_w } = q, H_em = 1 / (1 / q.H_op - 1 / H_ms);
+    const { irr, qSol: qWin, qInt, Tground } = room.inputs(w);
+    const qSol = Float64Array.from(qWin);
+    for (const o of "SNEW") for (let h = 0; h < 8760; h++) qSol[h] += q.opaqueSol[o] * irr[o][h];
+    const fst = 1 - q.Am / q.At - H_w / (9.1 * q.At), Cm = q.Cm / 3600;
+    const out = { T_air: new Float64Array(8760), T_op: new Float64Array(8760), T_s: new Float64Array(8760), T_m: new Float64Array(8760), Q_heat: new Float64Array(8760), ach: new Float64Array(8760) };
+    let Tmp = 18, Topp = 20, Tap = 20;
+    for (let h = 0; h < 8760; h++) {
+      const hod = h % 24, To = w.T[h];
+      const tset = ((hod >= 7 && hod < 9) || (hod >= 16 && hod < 23)) ? p.t_set : p.t_setback;
+      const want = Topp > p.t_open && To < Tap;
+      const ach = p.ach_base + (want && hod >= 7 && hod < 23 ? p.ach_day : (want && p.night_vent ? p.ach_night : 0));
+      const Hve = 0.33 * ach * q.V, H1 = 1 / (1 / Hve + 1 / H_is), H2 = H1 + H_w, H3 = 1 / (1 / H2 + 1 / H_ms);
+      const te = (q.H_out * To + q.H_g * Tground) / q.H_op, ts = To;
+      const pia = 0.5 * qInt[h], pst = fst * (0.5 * qInt[h] + qSol[h]), pm = q.Am / q.At * (0.5 * qInt[h] + qSol[h]);
+      const den = Cm + 0.5 * (H3 + H_em);
+      const pmt = pm + H_em * te + H3 * (pst + H_w * ts + H1 * (pia / Hve + ts)) / H2;
+      let Tmt = (Tmp * (Cm - 0.5 * (H3 + H_em)) + pmt) / den;
+      let Ts = (H_ms * 0.5 * (Tmt + Tmp) + pst + H_w * ts + H1 * (ts + pia / Hve)) / (H_ms + H_w + H1);
+      let Ta = (H_is * Ts + Hve * ts + pia) / (H_is + Hve);
+      const dTmt = H3 * H1 / (H2 * Hve) / den, dTs = (H_ms * 0.5 * dTmt + H1 / Hve) / (H_ms + H_w + H1), dTa = (H_is * dTs + 1) / (H_is + Hve);
+      const Q = Math.min(Math.max((tset - Ta) / dTa, 0), p.q_max);
+      Tmt += Q * dTmt; Ts += Q * dTs; Ta += Q * dTa;
+      const Top = 0.3 * Ta + 0.7 * Ts;
+      out.T_air[h] = Ta; out.T_op[h] = Top; out.T_s[h] = Ts; out.T_m[h] = 0.5 * (Tmt + Tmp); out.Q_heat[h] = Q; out.ach[h] = ach;
+      Tmp = Tmt; Topp = Top; Tap = Ta;
+    }
+    out.T_out = w.T;
+    return out;
+  }
+
+  // ---- metrics (room.metrics) ----------------------------------------------
+  function metrics(out, floorArea = 90) {
+    const Trm = runningMean(out.T_out);
+    let heat = 0, peak = 0, occ = 0, occOver = 0, nb = 0, dh = 0, h28 = 0, tmax = -1e9, swing = 0;
+    for (let h = 0; h < 8760; h++) {
+      const d = Math.floor(h / 24), hod = h % 24, ms = d >= 120 && d < 273, Top = out.T_op[h];
+      heat += out.Q_heat[h]; peak = Math.max(peak, out.Q_heat[h]);
+      if (ms && hod >= 9 && hod < 22) { occ++; if (Math.round(Top - (0.33 * Trm[h] + 21.8)) >= 1) occOver++; }
+      if ((hod >= 22 || hod < 7) && Top > 26) nb++;
+      if (ms) dh += Math.max(Top - 26, 0);
+      if (Top > 28) h28++;
+      tmax = Math.max(tmax, Top);
+    }
+    for (let d = 181; d < 212; d++) {
+      let mx = -1e9, mn = 1e9;
+      for (let k = 0; k < 24; k++) { const v = out.T_op[d * 24 + k]; mx = Math.max(mx, v); mn = Math.min(mn, v); }
+      swing += mx - mn;
+    }
+    return { heat_kwh_m2: heat / 1000 / floorArea, heat_peak_kw: peak / 1000, tm59a_pct: 100 * occOver / occ, tm59b_h: nb, dh26: dh, h28, T_op_max: tmax, jul_swing: swing / 31 };
+  }
+
+  // ---- sweeps (models/sweeps.py) -------------------------------------------
+  const SWEEP_BASE = "Timber frame, screed ground floor";
+  const T_LIST = [0, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3];
+  function massOverrides(t, wallMw = 0.14) {
+    const ov = { wall: new Element("Wv", "Timber frame (variable MW)", "wall", [L("plasterboard", .0125), L("mineral wool + studs", wallMw), L("OSB", .009), R("cavity", AIR_CAVITY), L("brick", .102)], "ext") };
+    if (t <= 0) Object.assign(ov, { ground: new Element("G0", "Chipboard on PIR on slab", "floor", [L("chipboard", .022), L("PIR", .1), L("dense concrete", .1)], "ground"), inter: LIB.I1, part: LIB.P1, party: LIB.P5 });
+    else Object.assign(ov, {
+      ground: new Element("Gt", "dense on PIR", "floor", [L("dense concrete", t), L("PIR", .1), L("dense concrete", .1)], "ground"),
+      inter: new Element("It", "slab", "floor", [L("dense concrete", t)], "room"),
+      part: new Element("Pt", "dense wall (half)", "partition", [L("dense concrete", t)], "adiabatic"),
+      party: new Element("Qt", "dense leaf", "partition", [L("dense concrete", t)], "adiabatic"),
+    });
+    return ov;
+  }
+  const MORRIS_PARAMS = [
+    ["exposed mass t (m)", 0.0, 0.3], ["glazing area ×", 0.5, 1.5], ["blind factor (closed)", 0.2, 1.0],
+    ["day purge ACH", 0.0, 6.0], ["night vent ACH", 0.0, 4.0], ["background ACH", 0.3, 1.0],
+    ["internal gains ×", 0.6, 1.4], ["wall insulation (m MW)", 0.09, 0.24],
+  ];
+  function morrisRoom(x, extra = {}) {
+    const v = x.map((xi, i) => MORRIS_PARAMS[i][1] + xi * (MORRIS_PARAMS[i][2] - MORRIS_PARAMS[i][1]));
+    const win = { S: 10 * v[1], N: 6 * v[1], E: 2 * v[1] };
+    return Object.assign({ overrides: massOverrides(v[0], v[7]), win, shade: v[2], ach_day: v[3], night_vent: v[4] > 0, ach_night: v[4], ach_base: v[5], gains_scale: v[6] }, extra);
+  }
+  // Seeded PRNG (mulberry32) for Morris trajectories
+  function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function morrisDesign(r = 10, levels = 4, seed = 3) {
+    const k = MORRIS_PARAMS.length, delta = levels / (2 * (levels - 1)), R_ = rng(seed);
+    const grid = [...Array(levels).keys()].map(i => i / (levels - 1)).filter(g => g <= 1 - delta + 1e-9);
+    const trajs = [];
+    for (let t = 0; t < r; t++) {
+      let x = Array.from({ length: k }, () => grid[Math.floor(R_() * grid.length)]);
+      const order = [...Array(k).keys()]; for (let i = k - 1; i > 0; i--) { const j = Math.floor(R_() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+      const pts = [{ x: x.slice(), i: -1 }];
+      for (const i of order) { const x2 = x.slice(); x2[i] = x[i] + delta <= 1 + 1e-9 ? x[i] + delta : x[i] - delta; pts.push({ x: x2, i, dx: x2[i] - x[i] }); x = x2; }
+      trajs.push(pts);
+    }
+    return trajs;
+  }
+
+  return { MAT, LIB, LIB_LIST, Element, L, R, massClass, characterise, libRow, CLASSES, chain, admittance, stepResponse,
+    parseEpw, withSun, morph, planeIrradiance, runningMean, PACKAGES, DEFAULTS, Room, params5r1c, run5r1c, metrics,
+    SWEEP_BASE, T_LIST, massOverrides, MORRIS_PARAMS, morrisRoom, morrisDesign, AIR_CAVITY, DAB_VOID, SERVICE_VOID, GAINS_PROFILE };
+})();
+if (typeof module !== "undefined") module.exports = TM;
+</script>
+<script>// Shared UI helpers: SVG charts, number formatting, worker runner.
+"use strict";
+const UI = (() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const fmt = (v, d = 1) => (v === null || v === undefined || Number.isNaN(v)) ? "–" : Number(v).toLocaleString("en-GB", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const NS = "http://www.w3.org/2000/svg";
+
+  function niceTicks(lo, hi, n = 5) {
+    if (hi === lo) { hi = lo + 1; }
+    const span = hi - lo, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+    const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag;
+    const start = Math.ceil(lo / step - 1e-9) * step, out = [];
+    for (let v = start; v <= hi + step * 1e-6; v += step) out.push(+v.toFixed(10));
+    return out;
+  }
+  function el(tag, attrs = {}, parent) {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function legend(host, series) {
+    const lg = document.createElement("div"); lg.className = "legend";
+    lg.innerHTML = series.filter(s => s.name).map(s => `<span><i style="background:${s.color};${s.dash ? "height:2px;background:repeating-linear-gradient(90deg," + s.color + " 0 4px,transparent 4px 7px)" : ""}"></i>${esc(s.name)}</span>`).join("");
+    host.appendChild(lg);
+  }
+
+  // Line chart. series: [{name, x: [], y: [], color, dash, width}]
+  function line(host, opt) {
+    host.innerHTML = "";
+    const W = Math.max(320, host.clientWidth || 640), H = opt.height || 260;
+    const m = { l: 52, r: 14, t: 10, b: 38 };
+    const all = opt.series.flatMap(s => s.x.map((x, i) => [x, s.y[i]])).filter(p => Number.isFinite(p[1]));
+    let x0 = opt.xMin ?? Math.min(...all.map(p => p[0])), x1 = opt.xMax ?? Math.max(...all.map(p => p[0]));
+    let y0 = opt.yMin ?? Math.min(...all.map(p => p[1])), y1 = opt.yMax ?? Math.max(...all.map(p => p[1]));
+    if (opt.yZero) y0 = Math.min(0, y0);
+    const pad = (y1 - y0) * 0.06 || 1; if (opt.yMin === undefined && !opt.yZero) y0 -= pad; if (opt.yMax === undefined) y1 += pad;
+    const lx = v => opt.xLog ? Math.log10(v) : v;
+    const X = v => m.l + (lx(v) - lx(x0)) / (lx(x1) - lx(x0)) * (W - m.l - m.r);
+    const Y = v => H - m.b - (v - y0) / (y1 - y0) * (H - m.t - m.b);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": opt.label || "chart" });
+    const yt = niceTicks(y0, y1, opt.yTicks || 5);
+    for (const v of yt) {
+      el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), class: "grid" }, svg);
+      const t = el("text", { x: m.l - 6, y: Y(v) + 4, "text-anchor": "end" }, svg); t.textContent = opt.yFmt ? opt.yFmt(v) : fmt(v, Math.abs(yt[1] - yt[0]) < 1 ? 1 : 0);
+    }
+    let xt = opt.xTickVals || (opt.xLog ? [1, 2, 4, 8, 12, 24, 48, 96, 168].filter(v => v >= x0 && v <= x1) : niceTicks(x0, x1, opt.xTicks || 6));
+    const minGap = opt.xFmt ? 52 : 34;  // drop tick labels that would collide on narrow screens
+    { const kept = []; for (const v of xt) if (!kept.length || X(v) - X(kept[kept.length - 1]) >= minGap) kept.push(v); xt = kept; }
+    for (const v of xt) {
+      el("line", { x1: X(v), x2: X(v), y1: H - m.b, y2: H - m.b + 4, class: "axis" }, svg);
+      const t = el("text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, svg); t.textContent = opt.xFmt ? opt.xFmt(v) : fmt(v, 0);
+    }
+    el("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, class: "axis" }, svg);
+    if (opt.xLabel) { const t = el("text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle", class: "ttl" }, svg); t.textContent = opt.xLabel; }
+    if (opt.yLabel) { const t = el("text", { x: 12, y: (m.t + H - m.b) / 2, "text-anchor": "middle", class: "ttl", transform: `rotate(-90 12 ${(m.t + H - m.b) / 2})` }, svg); t.textContent = opt.yLabel; }
+    for (const b of opt.bands || []) el("rect", { x: X(b.x0), y: m.t, width: Math.max(0, X(b.x1) - X(b.x0)), height: H - m.t - m.b, fill: b.color, opacity: b.opacity ?? 0.08 }, svg);
+    for (const r of opt.hlines || []) {
+      el("line", { x1: m.l, x2: W - m.r, y1: Y(r.y), y2: Y(r.y), stroke: r.color, "stroke-dasharray": "4 3", "stroke-width": 1 }, svg);
+      if (r.label) { const t = el("text", { x: W - m.r - 4, y: Y(r.y) - 4, "text-anchor": "end" }, svg); t.textContent = r.label; }
+    }
+    for (const s of opt.series) {
+      let d = "", pen = false;
+      s.x.forEach((x, i) => { const y = s.y[i]; if (!Number.isFinite(y)) { pen = false; return; } d += (pen ? "L" : "M") + X(x).toFixed(1) + "," + Y(y).toFixed(1); pen = true; });
+      el("path", { d, fill: "none", stroke: s.color, "stroke-width": s.width || 1.8, "stroke-dasharray": s.dash ? "5 4" : "none", "stroke-linejoin": "round" }, svg);
+      if (s.dots) s.x.forEach((x, i) => el("circle", { cx: X(x), cy: Y(s.y[i]), r: 2.8, fill: s.color }, svg));
+    }
+    host.appendChild(svg);
+    // hover readout
+    const tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; host.appendChild(tip);
+    const cross = el("line", { y1: m.t, y2: H - m.b, class: "axis", "stroke-width": 1, visibility: "hidden" }, svg);
+    svg.addEventListener("pointermove", ev => {
+      const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
+      if (px < m.l || px > W - m.r) { tip.hidden = true; cross.setAttribute("visibility", "hidden"); return; }
+      const ref = opt.series[0]; let best = 0, bd = Infinity;
+      ref.x.forEach((x, i) => { const dd = Math.abs(X(x) - px); if (dd < bd) { bd = dd; best = i; } });
+      const xv = ref.x[best];
+      cross.setAttribute("x1", X(xv)); cross.setAttribute("x2", X(xv)); cross.setAttribute("visibility", "visible");
+      tip.innerHTML = `<div>${esc(opt.xFmtTip ? opt.xFmtTip(xv) : (opt.xFmt ? opt.xFmt(xv) : fmt(xv, 2)))}</div>` +
+        opt.series.filter(s => s.name).map(s => { const j = s.x.indexOf(xv); const v = j >= 0 ? s.y[j] : NaN; return `<div style="color:${s.color}">${esc(s.name)}: ${fmt(v, opt.tipDigits ?? 2)}</div>`; }).join("");
+      tip.hidden = false;
+      const left = (X(xv) / W) * r.width; tip.style.left = Math.min(left + 12, r.width - tip.offsetWidth - 4) + "px"; tip.style.top = "8px";
+    });
+    svg.addEventListener("pointerleave", () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); });
+    if (!opt.noLegend) legend(host, opt.series);
+  }
+
+  // Horizontal grouped bars. labels: [], series: [{name, values, color}]
+  function hbar(host, opt) {
+    host.innerHTML = "";
+    const ns = opt.series.length, W = Math.max(320, host.clientWidth || 640), rowH = opt.rowH || (ns > 1 && opt.valueLabels ? 34 : 26);
+    const labW = Math.min(opt.labelWidth || 260, W * 0.48);
+    const m = { l: labW + 8, r: 40, t: 6, b: 34 }, H = m.t + m.b + rowH * opt.labels.length;
+    const vmax = opt.xMax ?? Math.max(...opt.series.flatMap(s => s.values), ...(opt.refs || []).map(r => r.x)) * 1.05;
+    const X = v => m.l + v / vmax * (W - m.l - m.r);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": opt.label || "bar chart" });
+    for (const v of niceTicks(0, vmax, W < 520 ? 3 : 5)) {
+      el("line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, class: "grid" }, svg);
+      const t = el("text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }, svg); t.textContent = fmt(v, 0);
+    }
+    if (opt.xLabel) { const t = el("text", { x: (m.l + W - m.r) / 2, y: H - 3, "text-anchor": "middle", class: "ttl" }, svg); t.textContent = opt.xLabel; }
+    const bh = (rowH - 6) / ns;
+    opt.labels.forEach((lab, i) => {
+      const y = m.t + i * rowH;
+      const t = el("text", { x: m.l - 8, y: y + rowH / 2 + 4, "text-anchor": "end", class: "ttl" }, svg);
+      t.textContent = lab.length > labW / 6.2 ? lab.slice(0, Math.floor(labW / 6.2) - 1) + "…" : lab;
+      const tt = el("title", {}, t); tt.textContent = lab;
+      opt.series.forEach((s, k) => {
+        const v = s.values[i];
+        el("rect", { x: m.l, y: y + 3 + k * bh, width: Math.max(0, X(v) - m.l), height: bh - 1, fill: s.color, rx: 1.5 }, svg);
+        if (opt.valueLabels) { const vt = el("text", { x: X(v) + 4, y: y + 3 + k * bh + bh / 2 + 3.5 }, svg); vt.textContent = fmt(v, opt.digits ?? 0); }
+      });
+    });
+    for (const r of opt.refs || []) {
+      el("line", { x1: X(r.x), x2: X(r.x), y1: m.t, y2: H - m.b, stroke: r.color || css("--fg"), "stroke-dasharray": "4 3" }, svg);
+      if (r.label) { const t = el("text", { x: X(r.x) + 4, y: m.t + 10 }, svg); t.textContent = r.label; }
+    }
+    host.appendChild(svg);
+    if (ns > 1) legend(host, opt.series);
+  }
+
+  // Heatmap as a table. rows/cols labels, Z[row][col]
+  function heat(host, { rows, cols, Z, rowTitle, colTitle, digits = 0, color = "--heat" }) {
+    const vals = Z.flat(), lo = Math.min(...vals), hi = Math.max(...vals);
+    let h = `<div class="scroll"><table class="data"><thead><tr><th class="l">${esc(rowTitle)} \\ ${esc(colTitle)}</th>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>`;
+    Z.forEach((r, i) => {
+      h += `<tr><td class="l">${esc(rows[i])}</td>` + r.map(v => {
+        const f = hi > lo ? (v - lo) / (hi - lo) : 0;
+        return `<td style="background:color-mix(in srgb, var(${color}) ${Math.round(8 + 62 * f)}%, var(--panel));color:${f > 0.6 ? "var(--panel)" : "var(--fg)"}">${fmt(v, digits)}</td>`;
+      }).join("") + "</tr>";
+    });
+    host.innerHTML = h + "</tbody></table></div>";
+  }
+
+  // Run work in a Web Worker built from the core source; falls back to the main thread.
+  function makeWorker(coreSrc, handlerSrc) {
+    try {
+      const blob = new Blob([coreSrc + "\n" + handlerSrc], { type: "text/javascript" });
+      const w = new Worker(URL.createObjectURL(blob));
+      return w;
+    } catch (e) { return null; }
+  }
+
+  function decodeWeather(s) {
+    const [meta, T, G, Dn, Dh] = s.split("|");
+    const dec = (str, k) => Float64Array.from(str.split(",").map(v => +v / k));
+    const [lat, lon, ...name] = meta.split(",");
+    return { T: dec(T, 10), GHI: dec(G, 1), DNI: dec(Dn, 1), DHI: dec(Dh, 1), lat: +lat, lon: +lon, name: name.join(",") };
+  }
+
+  function themeColors() {
+    return { heat: css("--heat"), cool: css("--cool"), mass: css("--mass"), fg: css("--fg"), muted: css("--muted"), line: css("--line"), ok: css("--ok"), bad: css("--bad"), warn: css("--warn") };
+  }
+  function onTheme(fn) {
+    const mq = matchMedia("(prefers-color-scheme: dark)"); mq.addEventListener?.("change", fn);
+    new MutationObserver(fn).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(fn, 150); });
+  }
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+  };
+  return { $, $$, esc, fmt, css, line, hbar, heat, makeWorker, decodeWeather, themeColors, onTheme, store, niceTicks };
+})();
+</script>
+<script>
+(() => {
+  const { $, esc, fmt } = UI;
+  const sel = $("#el");
+  sel.innerHTML = TM.LIB_LIST.map(e => `<option value="${e.key}">${e.key} · ${esc(e.name)}</option>`).join("");
+  sel.value = UI.store.get("cl.key", "W2") in TM.LIB ? UI.store.get("cl.key", "W2") : "W2";
+  const DT = 300, DAYS = 4, PER = 86400 / DT;
+  let last = null;
+
+  function positions(e, mode, dx) {
+    // node positions (mm from the room surface) matching the chain construction
+    if (mode === "fd") {
+      const xs = [0]; let x = 0;
+      const push = (n, h) => { for (let i = 0; i < n; i++) { x += h; xs.push(x); } };
+      for (const l of e.layers) { if (l.length === 2) push(1, 0); else { const n = Math.max(1, Math.ceil(l[1] / dx - 1e-9)); push(n, l[1] / n * 1000); } }
+      if (e.back === "ground") push(20, 50);
+      return xs;
+    }
+    // five-node: nodes sit at resistance shares 0, 1/6, 1/2, 5/6, 1 of Rc; map each to a depth
+    const pts = [[0, 0]]; let R = 0, x = 0;
+    for (const l of e.layers) { if (l.length === 2) R += l[1]; else { R += l[1] / l[2]; x += l[1] * 1000; } pts.push([R, x]); }
+    const D = x;
+    const depth = f => { const r = f * R; for (let i = 1; i < pts.length; i++) if (r <= pts[i][0] + 1e-12) { const [r0, x0] = pts[i - 1], [r1, x1] = pts[i]; return r1 > r0 ? x0 + (r - r0) / (r1 - r0) * (x1 - x0) : x1; } return D; };
+    const pos = [0, 1 / 6, 1 / 2, 5 / 6, 1].map(depth);
+    if (e.back === "ground") for (let i = 1; i <= 20; i++) pos.push(D + 50 * i);
+    return pos;
+  }
+
+  function run() {
+    const e = TM.LIB[sel.value], clsSel = $("#cls").value, cls = clsSel === "auto" ? e.cls : clsSel, dx = +$("#dx").value;
+    UI.store.set("cl.key", e.key);
+    const mean = +$("#mean").value, amp = +$("#amp").value, pk = +$("#peak").value, far = +$("#far").value;
+    const n = DAYS * PER, Tr = new Float64Array(n);
+    for (let i = 0; i < n; i++) Tr[i] = mean + amp * Math.cos(2 * Math.PI * ((i * DT) / 3600 - pk) / 24);
+    const fd = TM.stepResponse(e, Tr, DT, "fd", dx, null, far, 12);
+    const f5 = TM.stepResponse(e, Tr, DT, "5node", 0.005, cls, far, 12);
+    last = { e, cls, dx, Tr, fd, f5, far };
+    $("#title").textContent = e.name;
+    $("#sub").textContent = `${e.key} · ${fd.chain.n} mesh nodes · five-node class ${cls}`;
+    const s0 = n - PER, hrs = [], qf = [], q5 = [], tr = [];
+    let aF = 0, a5 = 0, pF = -1e9, p5 = -1e9, tF = 0, t5 = 0;
+    for (let i = s0; i < n; i++) {
+      const h = ((i - s0) * DT) / 3600; hrs.push(h); qf.push(fd.q[i]); q5.push(f5.q[i]); tr.push(Tr[i]);
+      if (h >= 9 && h < 18) { aF += fd.q[i] * DT / 3.6e6; a5 += f5.q[i] * DT / 3.6e6; }
+      if (fd.q[i] > pF) { pF = fd.q[i]; tF = h; } if (f5.q[i] > p5) { p5 = f5.q[i]; t5 = h; }
+    }
+    const iso = e.iso();
+    $("#tiles").innerHTML = [
+      ["Absorbed 09–18, fine mesh", fmt(aF * 1000, 0), "Wh/m²"],
+      ["Absorbed 09–18, five-node", fmt(a5 * 1000, 0), `Wh/m², ${fmt(a5 / aF, 2)} × mesh`],
+      ["ISO 13786 |Y|", fmt(iso.Y, 2), `W/m²K, κ₁ ${fmt(iso.kappa1, 0)} kJ/m²K`],
+      ["Peak flux, fine mesh", fmt(pF, 1), `W/m² at ${fmt(tF, 1)} h`],
+      ["Peak flux, five-node", fmt(p5, 1), `W/m² at ${fmt(t5, 1)} h`],
+      ["Room swing", `±${fmt(amp, 1)}`, `K about ${fmt(mean, 1)} °C, peak ${pk}:00`],
+    ].map(([k, v, u]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="u">${u}</span></div>`).join("");
+    const C = UI.themeColors();
+    UI.line($("#cFlux"), {
+      xMin: 0, xMax: 24, xTickVals: [0, 3, 6, 9, 12, 15, 18, 21, 24], xLabel: "hour of day", yLabel: "W/m²", xFmtTip: v => `${String(Math.floor(v)).padStart(2, "0")}:${String(Math.round((v % 1) * 60)).padStart(2, "0")}`,
+      series: [{ name: "Fine mesh", x: hrs, y: qf, color: C.fg, width: 2.2 }, { name: `Five-node ${cls}`, x: hrs, y: q5, color: C.heat }],
+      bands: [{ x0: 9, x1: 18, color: C.heat, opacity: 0.07 }], hlines: [{ y: 0, color: C.muted }],
+    });
+    // mesh table
+    const rows = [0.02, 0.01, 0.005, 0.002].map(d => { const y = TM.admittance(e, "fd", d).Y; return [d, TM.chain(e, "fd", d).n, y, (y / iso.Y - 1) * 100]; });
+    $("#tMesh").innerHTML = `<thead><tr><th class="l">Cell size</th><th>Nodes</th><th>|Y| W/m²K</th><th>vs ISO</th></tr></thead><tbody>` +
+      rows.map(([d, nn, y, er]) => `<tr${d === dx ? ' class="sel"' : ""}><td class="l">${d * 1000} mm</td><td>${nn}</td><td>${fmt(y, 3)}</td><td>${er >= 0 ? "+" : ""}${fmt(er, 2)}%</td></tr>`).join("") +
+      `<tr><td class="l">ISO 13786</td><td>–</td><td>${fmt(iso.Y, 3)}</td><td>0</td></tr><tr><td class="l">Five-node ${cls}</td><td>5</td><td>${fmt(TM.admittance(e, "5node", 0.005, cls).Y, 3)}</td><td>${fmt((TM.admittance(e, "5node", 0.005, cls).Y / iso.Y - 1) * 100, 0)}%</td></tr></tbody>`;
+    profile();
+  }
+
+  function profile() {
+    if (!last) return;
+    const { e, cls, dx, fd, f5 } = last, hr = +$("#hour").value;
+    $("#hourOut").textContent = `${String(hr).padStart(2, "0")}:00`;
+    const P = fd.profiles, k0 = P.length - 24, xs = positions(e, "fd", dx);
+    const lim = e.back === "ground" ? xs.length : xs.length; // soil included for ground floors
+    const cur = P[k0 + hr], lo = xs.map((_, j) => Math.min(...P.slice(k0).map(p => p[j]))), hi = xs.map((_, j) => Math.max(...P.slice(k0).map(p => p[j])));
+    const p5 = f5.profiles[k0 + hr], x5 = positions(e, "5node", dx);
+    const C = UI.themeColors();
+    const xmax = e.back === "ground" ? Math.min(xs[xs.length - 1], xs[xs.length - 21] + 300) : xs[xs.length - 1];
+    const keep = xs.map((x, j) => x <= xmax ? j : -1).filter(j => j >= 0);
+    UI.line($("#cProf"), {
+      xMin: 0, xMax: xmax, xLabel: "depth from room surface, mm", yLabel: "°C", tipDigits: 2, xFmtTip: v => fmt(v, 1) + " mm",
+      series: [
+        { name: `${String(hr).padStart(2, "0")}:00`, x: keep.map(j => xs[j]), y: keep.map(j => cur[j]), color: C.heat, width: 2.2 },
+        { name: "daily max", x: keep.map(j => xs[j]), y: keep.map(j => hi[j]), color: C.muted, dash: true, width: 1.2 },
+        { name: "daily min", x: keep.map(j => xs[j]), y: keep.map(j => lo[j]), color: C.cool, dash: true, width: 1.2 },
+        { name: `five-node ${cls}`, x: x5.filter(x => x <= xmax), y: x5.filter(x => x <= xmax).map((_, j) => p5[j]), color: C.fg, width: 0.01, dots: true },
+      ],
+    });
+  }
+
+  ["#el", "#cls", "#dx", "#mean", "#amp", "#peak", "#far"].forEach(s => $(s).addEventListener("change", run));
+  sel.addEventListener("change", () => { const e = TM.LIB[sel.value]; $("#far").value = e.back === "ext" ? 15 : 24; run(); });
+  $("#hour").addEventListener("input", profile);
+  run();
+  UI.onTheme(run);
+})();
+</script>
+
+</body>
+</html>

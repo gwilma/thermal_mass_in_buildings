@@ -1,0 +1,205 @@
+<title>House Simulator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>{{STYLE}}</style>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Thermal mass toolkit · model 3 of 4</div>
+      <h1>House Simulator</h1>
+    </div>
+    <p class="lede">A 90 m² two-storey semi run hour by hour for a year. Swap the construction, glazing, ventilation and weather, and see heating, peak load and summer overheating. Pin a run as the baseline to compare.</p>
+  </header>
+  <div class="layout">
+    <aside class="panel controls" aria-label="House set-up">
+      <div class="field"><label for="pkg">Construction</label><select id="pkg"></select></div>
+      <div class="row">
+        <div class="field"><label for="model">Fabric model</label>
+          <select id="model"><option value="fd">Fine mesh</option><option value="5node">Five-node</option><option value="5r1c">5R1C</option></select></div>
+        <div class="field"><label for="wx">Weather</label>
+          <select id="wx"><option value="typical">Heathrow typical</option><option value="hot" selected>Hot summer</option><option value="hot2050">Hot 2050s</option><option value="upload">Upload EPW…</option></select></div>
+      </div>
+      <input id="epw" type="file" accept=".epw" hidden>
+      <div class="status" id="wxName"></div>
+      <details open><summary>Ventilation</summary>
+        <div class="field"><label for="achDay">Day purge, windows open 07–23 <span class="range-out" id="achDayOut"></span></label><input id="achDay" type="range" min="0" max="6" step="0.5" value="3"></div>
+        <label class="check"><input id="nv" type="checkbox"> Night ventilation (secure windows 23–07)</label>
+        <div class="field"><label for="achNight">Night rate <span class="range-out" id="achNightOut"></span></label><input id="achNight" type="range" min="0" max="5" step="0.5" value="2"></div>
+        <div class="field"><label for="achBase">Background rate <span class="range-out" id="achBaseOut"></span></label><input id="achBase" type="range" min="0.2" max="1.2" step="0.05" value="0.5"></div>
+        <div class="field"><label for="tOpen">Open windows above <span class="range-out" id="tOpenOut"></span></label><input id="tOpen" type="range" min="20" max="26" step="0.5" value="22"></div>
+      </details>
+      <details open><summary>Glazing and gains</summary>
+        <div class="field"><label for="glz">Glazing area <span class="range-out" id="glzOut"></span></label><input id="glz" type="range" min="0.5" max="1.6" step="0.05" value="1"></div>
+        <div class="row">
+          <div class="field"><label for="g">g-value</label><input id="g" type="number" min="0.2" max="0.8" step="0.05" value="0.6"></div>
+          <div class="field"><label for="front">Front faces</label><select id="front"><option>S</option><option>N</option><option>E</option><option>W</option></select></div>
+        </div>
+        <div class="field"><label for="shade">Blinds when sunny (1 = none) <span class="range-out" id="shadeOut"></span></label><input id="shade" type="range" min="0.2" max="1" step="0.05" value="1"></div>
+        <div class="field"><label for="gains">Internal gains <span class="range-out" id="gainsOut"></span></label><input id="gains" type="range" min="0.5" max="1.5" step="0.05" value="1"></div>
+      </details>
+      <details><summary>Heating</summary>
+        <div class="row">
+          <div class="field"><label for="tset">Setpoint °C</label><input id="tset" type="number" step="0.5" value="21"></div>
+          <div class="field"><label for="tsb">Setback °C</label><input id="tsb" type="number" step="0.5" value="16"></div>
+        </div>
+        <p class="note">On 07–09 and 16–23, setback otherwise, capped at 6 kW.</p>
+      </details>
+      <div class="row"><button id="run" type="button">Run year</button><button id="pin" type="button" class="ghost">Pin as baseline</button></div>
+      <div class="progress" aria-hidden="true"><div id="bar"></div></div>
+      <div class="status" id="status" role="status"></div>
+    </aside>
+    <main class="results">
+      <section class="panel">
+        <div class="section-head"><h2 id="title">–</h2><span class="eyebrow" id="sub"></span></div>
+        <div class="tiles four" id="tiles"></div>
+        <p class="note">TM59-style indicators applied to the whole house as one zone: (a) share of occupied hours (09–22, May–Sep) at least 1 K above the adaptive limit, limit 3%; (b) night hours (22–07) above 26 °C, limit 32. They compare cases; they are not a TM59 assessment.</p>
+      </section>
+      <section class="panel">
+        <div class="section-head"><h3>Mid-July heatwave fortnight</h3><span class="note">operative temperature</span></div>
+        <div class="chart" id="cWave"></div>
+      </section>
+      <section class="split">
+        <div class="panel">
+          <h3>Daily peak operative temperature, May to September</h3>
+          <div class="chart" id="cDaily"></div>
+        </div>
+        <div class="panel">
+          <h3>Space heating by month</h3>
+          <div class="chart" id="cMonth"></div>
+        </div>
+      </section>
+      <div class="footer">
+        <span>Port of models/room.py and models/room5r1c.py (gwilma/thermal_mass_in_buildings); the same inputs give the same numbers as the Python model.</span>
+        <span>Weather: London Heathrow TMYx 2011–2025, climate.onebuilding.org. The hot years add 1.5 K to June–August and a 4 K heatwave over 15–21 July; the 2050s year adds a further 2.5 K in summer and 1.5 K otherwise. These morphs are illustrative, not CIBSE DSY or UKCP18 files.</span>
+      </div>
+    </main>
+  </div>
+</div>
+<script id="wxData" type="text/plain">{{WEATHER}}</script>
+<script id="coreSrc">{{CORE}}</script>
+<script>{{UI}}</script>
+<script>
+(() => {
+  const { $, esc, fmt } = UI;
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], MD = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const base = UI.decodeWeather($("#wxData").textContent);
+  let uploaded = null, current = null, baseline = null, busy = false;
+  $("#pkg").innerHTML = Object.keys(TM.PACKAGES).map(p => `<option>${esc(p)}</option>`).join("");
+  $("#pkg").value = "Masonry (dense block, dabs), stud partitions";
+
+  const HANDLER = `
+    onmessage = ev => {
+      const { pkg, opts, wx, variant, model } = ev.data;
+      const w = TM.morph(TM.withSun(wx), variant);
+      const room = new TM.Room(pkg, Object.assign({}, opts, { mode: model === "5r1c" ? "fd" : model }));
+      const out = model === "5r1c" ? TM.run5r1c(room, w) : room.run(w, f => postMessage({ progress: f }));
+      const m = TM.metrics(out);
+      const [k1, kt] = room.kappaSummary();
+      postMessage({ done: true, m, k1, kt, H: room.fabricH(), n: room.n,
+        T_op: Float32Array.from(out.T_op), T_air: Float32Array.from(out.T_air), T_out: Float32Array.from(w.T), Q: Float32Array.from(out.Q_heat) });
+    };`;
+  const worker = UI.makeWorker($("#coreSrc").textContent, HANDLER);
+
+  function opts() {
+    const g = +$("#glz").value;
+    return { win: { S: 10 * g, N: 6 * g, E: 2 * g }, g_win: +$("#g").value, front: $("#front").value, shade: +$("#shade").value,
+      ach_base: +$("#achBase").value, ach_day: +$("#achDay").value, night_vent: $("#nv").checked, ach_night: +$("#achNight").value,
+      t_open: +$("#tOpen").value, gains_scale: +$("#gains").value, t_set: +$("#tset").value, t_setback: +$("#tsb").value };
+  }
+  const outs = { achDay: v => `${v} ACH`, achNight: v => `${v} ACH`, achBase: v => `${v} ACH`, tOpen: v => `${v} °C`, glz: v => `${Math.round(v * 18)} m² (${v}×)`, shade: v => v >= 1 ? "none" : `${Math.round((1 - v) * 100)}% cut`, gains: v => `${Math.round(v * 298)} W mean` };
+  for (const id in outs) { const upd = () => { $("#" + id + "Out").textContent = outs[id]($("#" + id).value); }; $("#" + id).addEventListener("input", upd); upd(); }
+
+  function weatherSel() {
+    const v = $("#wx").value;
+    if (v === "upload") return uploaded ? { wx: uploaded, variant: "typical", name: uploaded.name } : null;
+    return { wx: base, variant: v, name: { typical: "Heathrow TMYx, as recorded", hot: "Heathrow TMYx, hot-summer morph", hot2050: "Heathrow TMYx, 2050s hot morph" }[v] };
+  }
+  $("#wx").addEventListener("change", () => { if ($("#wx").value === "upload" && !uploaded) $("#epw").click(); else run(); });
+  $("#epw").addEventListener("change", async ev => {
+    const f = ev.target.files[0]; if (!f) return;
+    try { uploaded = TM.parseEpw(await f.text()); uploaded.name = f.name; run(); }
+    catch (e) { $("#status").textContent = `Could not read ${f.name}: ${e.message}`; $("#wx").value = "hot"; }
+  });
+
+  function run() {
+    if (busy) return;
+    const ws = weatherSel(); if (!ws) return;
+    busy = true; $("#run").disabled = true; $("#bar").style.width = "2%";
+    $("#wxName").textContent = ws.name;
+    const msg = { pkg: $("#pkg").value, opts: opts(), wx: ws.wx, variant: ws.variant, model: $("#model").value };
+    const label = `${msg.pkg} · ${$("#model").selectedOptions[0].text} · ${ws.name}`;
+    $("#status").textContent = "Running 8,760 hours…";
+    const t0 = performance.now();
+    const finish = d => {
+      busy = false; $("#run").disabled = false; $("#bar").style.width = "100%";
+      $("#status").textContent = `Done in ${fmt((performance.now() - t0) / 1000, 1)} s, ${d.n} nodes.`;
+      current = Object.assign(d, { label, msg }); show();
+    };
+    if (worker) {
+      worker.onmessage = ev => { if (ev.data.progress !== undefined) $("#bar").style.width = Math.round(ev.data.progress * 100) + "%"; else finish(ev.data); };
+      worker.onerror = e => { busy = false; $("#run").disabled = false; $("#status").textContent = "The simulation stopped: " + e.message; };
+      worker.postMessage(msg);
+    } else setTimeout(() => {
+      const w = TM.morph(TM.withSun(msg.wx), msg.variant);
+      const room = new TM.Room(msg.pkg, Object.assign({}, msg.opts, { mode: msg.model === "5r1c" ? "fd" : msg.model }));
+      const out = msg.model === "5r1c" ? TM.run5r1c(room, w) : room.run(w);
+      const [k1, kt] = room.kappaSummary();
+      finish({ m: TM.metrics(out), k1, kt, H: room.fabricH(), n: room.n, T_op: out.T_op, T_air: out.T_air, T_out: w.T, Q: out.Q_heat });
+    }, 30);
+  }
+
+  function delta(k, digits, lowerBetter = true) {
+    if (!baseline) return "";
+    const d = current.m[k] - baseline.m[k]; if (Math.abs(d) < Math.pow(10, -digits) / 2) return `<span class="d">= baseline</span>`;
+    const good = lowerBetter ? d < 0 : d > 0;
+    return `<span class="d" style="color:var(${good ? "--ok" : "--bad"})">${d > 0 ? "+" : "−"}${fmt(Math.abs(d), digits)} vs baseline</span>`;
+  }
+  function show() {
+    if (!current) return;
+    const m = current.m, C = UI.themeColors();
+    $("#title").textContent = current.msg.pkg;
+    $("#sub").textContent = `κ₁ ${fmt(current.k1, 0)} kJ/m²K per m² floor · fabric H ${fmt(current.H, 0)} W/K`;
+    const chip = ok => `<span class="chip ${ok ? "ok" : "bad"}">${ok ? "within" : "over"}</span>`;
+    $("#tiles").innerHTML = [
+      ["Space heating", fmt(m.heat_kwh_m2, 1), "kWh/m² a year", delta("heat_kwh_m2", 1)],
+      ["Peak heating", fmt(m.heat_peak_kw, 2), "kW, hourly mean", delta("heat_peak_kw", 2)],
+      ["TM59 (a) style", fmt(m.tm59a_pct, 1) + "%", "of occupied hours " + chip(m.tm59a_pct <= 3), delta("tm59a_pct", 1)],
+      ["TM59 (b) style", fmt(m.tm59b_h, 0), "night hours > 26 °C " + chip(m.tm59b_h <= 32), delta("tm59b_h", 0)],
+      ["Degree-hours > 26 °C", fmt(m.dh26, 0), "K·h, May–Sep", delta("dh26", 0)],
+      ["Peak operative", fmt(m.T_op_max, 1), "°C", delta("T_op_max", 1)],
+      ["July daily swing", fmt(m.jul_swing, 1), "K, mean", delta("jul_swing", 1)],
+      ["Hours > 28 °C", fmt(m.h28, 0), "operative, whole year", delta("h28", 0)],
+    ].map(([k, v, u, d]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="u">${u}</span>${d}</div>`).join("");
+    // heatwave fortnight
+    const h0 = 189 * 24, h1 = 205 * 24, xs = [], pick = a => Array.from(a.slice(h0, h1));
+    for (let h = h0; h < h1; h++) xs.push(h / 24 + 1);
+    const ser = [
+      { name: "Outdoor air", x: xs, y: pick(current.T_out), color: C.cool, width: 1.3 },
+      { name: "Operative", x: xs, y: pick(current.T_op), color: C.heat, width: 2.2 },
+      { name: "Room air", x: xs, y: pick(current.T_air), color: C.muted, width: 1 },
+    ];
+    if (baseline) ser.push({ name: "Baseline operative", x: xs, y: pick(baseline.T_op), color: C.fg, dash: true, width: 1.5 });
+    const dayLabel = v => { let d = Math.floor(v) - 1, mo = 0; while (d >= MD[mo]) { d -= MD[mo]; mo++; } return `${d + 1} ${MONTHS[mo]}`; };
+    UI.line($("#cWave"), { series: ser, yLabel: "°C", xFmt: dayLabel, xTickVals: [191, 194, 197, 200, 203, 206].filter(v => v <= h1 / 24 + 1), xFmtTip: v => `${dayLabel(v)} ${String(Math.round((v % 1) * 24)).padStart(2, "0")}:00`, hlines: [{ y: 26, color: C.bad, label: "26 °C" }], tipDigits: 1, height: 280 });
+    // daily max May–Sep
+    const dmax = a => { const o = []; for (let d = 120; d < 273; d++) { let mx = -99; for (let k = 0; k < 24; k++) mx = Math.max(mx, a[d * 24 + k]); o.push(mx); } return o; };
+    const dx = Array.from({ length: 153 }, (_, i) => i + 121);
+    const s2 = [{ name: "This run", x: dx, y: dmax(current.T_op), color: C.heat }, { name: "Outdoor max", x: dx, y: dmax(current.T_out), color: C.cool, width: 1 }];
+    if (baseline) s2.push({ name: "Baseline", x: dx, y: dmax(baseline.T_op), color: C.fg, dash: true, width: 1.3 });
+    UI.line($("#cDaily"), { series: s2, yLabel: "°C", xFmt: dayLabel, xTickVals: [121, 152, 182, 213, 244, 273], xFmtTip: dayLabel, tipDigits: 1 });
+    // monthly heating
+    const mon = q => { const o = []; let h = 0; for (let i = 0; i < 12; i++) { let s = 0; for (let k = 0; k < MD[i] * 24; k++) s += q[h++]; o.push(s / 1000 / 90); } return o; };
+    const bars = [{ name: "This run", values: mon(current.Q), color: C.heat }];
+    if (baseline) bars.push({ name: "Baseline", values: mon(baseline.Q), color: C.muted });
+    UI.hbar($("#cMonth"), { labels: MONTHS, series: bars, xLabel: "kWh/m²", labelWidth: 50, rowH: baseline ? 22 : 18, valueLabels: !baseline, digits: 1 });
+  }
+
+  $("#run").onclick = run;
+  $("#pin").onclick = () => { if (current) { baseline = current; $("#pin").textContent = "Baseline pinned"; show(); } };
+  ["#pkg", "#model", "#front", "#nv", "#g", "#tset", "#tsb"].forEach(s => $(s).addEventListener("change", run));
+  ["#achDay", "#achNight", "#achBase", "#tOpen", "#glz", "#shade", "#gains"].forEach(s => $(s).addEventListener("change", run));
+  UI.onTheme(show);
+  run();
+})();
+</script>

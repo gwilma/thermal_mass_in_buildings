@@ -1,6 +1,6 @@
 """Model 3 results: the construction packages compared in one house.
 
-For each package in room.PACKAGES, runs the synthetic London year
+For each package in room.PACKAGES, runs the Heathrow TMYx year
 ("typical" for heating, "hot" and "hot2050" for overheating), with daytime
 purge only and with night ventilation added, in fine-mesh and five-node
 element modes. Writes results/packages.csv, results/packages.md and
@@ -17,7 +17,7 @@ OUT = os.path.join(HERE, "results")
 
 
 def run():
-    W = {v: wx.synthetic(v) for v in ("typical", "hot", "hot2050")}
+    W = {v: wx.get(v) for v in ("typical", "hot", "hot2050")}
     rows = []
     for name in PACKAGES:
         for mode in ("fd", "5node"):
@@ -32,6 +32,14 @@ def run():
                     tag = f"{wv}_{'nv' if nv else 'day'}"
                     for k in ("tm59a_pct", "tm59b_h", "dh26", "T_op_max", "jul_swing"):
                         r[f"{tag}_{k}"] = m[k]
+            if mode == "fd":
+                import room5r1c
+                m = metrics(room5r1c.run(base, W["typical"]))
+                r.update(r5_heat=m["heat_kwh_m2"], r5_peak=m["heat_peak_kw"])
+                for nv in (False, True):
+                    m = metrics(room5r1c.run(Room(name, night_vent=nv), W["hot"]))
+                    tag = "nv" if nv else "day"
+                    r.update(**{f"r5_{tag}_dh26": m["dh26"], f"r5_{tag}_b": m["tm59b_h"], f"r5_{tag}_a": m["tm59a_pct"]})
             rows.append(r)
             print(name, mode, {k: round(v, 1) for k, v in r.items() if isinstance(v, float)})
     return rows
@@ -39,14 +47,15 @@ def run():
 
 def write(rows):
     os.makedirs(OUT, exist_ok=True)
+    keys = list(dict.fromkeys(k for r in rows for k in r))
     with open(os.path.join(OUT, "packages.csv"), "w", newline="") as fh:
-        w = csv.DictWriter(fh, list(rows[0])); w.writeheader(); w.writerows(rows)
+        w = csv.DictWriter(fh, keys); w.writeheader(); w.writerows(rows)
     fd = [r for r in rows if r["mode"] == "fd"]
     n5 = {r["package"]: r for r in rows if r["mode"] == "5node"}
     L = ["# Model 3: construction packages in one house", "",
          "Two-storey semi, 90 m², same windows, ventilation, gains and controls in every case; only the fabric changes. "
          "Fine-mesh elements. κ₁ is ISO 13786 daily areal heat capacity × area, per m² floor. "
-         "Heating: synthetic typical year. Overheating: synthetic hot (DSY-like) year, single zone, TM59-style indicators: "
+         "Heating: Heathrow TMYx 2011-2025. Overheating: the same file morphed into a hot (DSY-like) year, single zone, TM59-style indicators: "
          "(a) % of occupied hours May–Sep at ΔT ≥ 1 K (limit 3%), (b) night hours above 26 °C (limit 32). "
          "DH26 is degree-hours above 26 °C, May–Sep.", "",
          "| Package | κ₁ kJ/m²K | H W/K | Heat kWh/m² | Peak kW | (a) % day vent | (b) h day vent | DH26 day vent | (a) % +night vent | (b) h +night vent | DH26 +night vent | DH26 2050 +night vent | July swing K |",
@@ -65,6 +74,13 @@ def write(rows):
                  f"{q['hot_day_dh26']-r['hot_day_dh26']:+.0f} ({100*(q['hot_day_dh26']/r['hot_day_dh26']-1):+.0f}%) | "
                  f"{q['hot_nv_dh26']-r['hot_nv_dh26']:+.0f} ({100*(q['hot_nv_dh26']/max(r['hot_nv_dh26'],1)-1):+.0f}%) | "
                  f"{q['hot_nv_tm59b_h']-r['hot_nv_tm59b_h']:+.0f} | {q['hot_nv_jul_swing']-r['hot_nv_jul_swing']:+.2f} |")
+    L += ["", "## Simplified 5R1C (the Excel workbook's model) vs the full model", "",
+          "ISO 13790-style single mass node with C_m = Σ κ₁A. Same weather, gains, ventilation and controls.", "",
+          "| Package | Heat kWh/m² full / 5R1C | Peak kW full / 5R1C | DH26 day vent full / 5R1C | DH26 +night vent full / 5R1C | (b) h +night vent full / 5R1C |",
+          "|---|---|---|---|---|---|"]
+    for r in sorted(fd, key=lambda r: r["kappa1"]):
+        L.append(f"| {r['package']} | {r['heat_kwh_m2']:.1f} / {r['r5_heat']:.1f} | {r['heat_peak_kw']:.2f} / {r['r5_peak']:.2f} | "
+                 f"{r['hot_day_dh26']:.0f} / {r['r5_day_dh26']:.0f} | {r['hot_nv_dh26']:.0f} / {r['r5_nv_dh26']:.0f} | {r['hot_nv_tm59b_h']:.0f} / {r['r5_nv_b']:.0f} |")
     open(os.path.join(OUT, "packages.md"), "w").write("\n".join(L) + "\n")
     print("\n".join(L))
     figure(fd)

@@ -8,7 +8,7 @@
   C. Morris elementary-effects screening of eight inputs, to rank what
      matters for overheating and heating.
 
-Writes results/sweeps.md and figures. Fine-mesh elements, synthetic weather.
+Writes results/sweeps.md and figures. Fine-mesh elements, Heathrow TMYx weather.
 """
 import os
 import numpy as np
@@ -156,7 +156,7 @@ def figures(A, B, M):
 def write(A, B, M):
     L = ["# Model 4: sweeps", "",
          f"Base: '{BASE}' envelope with an exposed dense layer of thickness t on the ground floor, intermediate floor (slab "
-         "of thickness t), partitions (2t thick) and party wall. t = 0 swaps in board and chipboard. Synthetic weather.", "",
+         "of thickness t), partitions (2t thick) and party wall. t = 0 swaps in board and chipboard. Heathrow TMYx weather (hot and 2050s years are morphed).", "",
          "## A. Diminishing returns", "",
          "| t mm | κ₁ kJ/m²K per m² floor | κ_tot | heat kWh/m² | peak kW | DH26 hot day | DH26 hot +nv | DH26 2050 +nv | (b) h hot +nv | T_op max hot +nv | July swing +nv K |",
          "|---|---|---|---|---|---|---|---|---|---|---|"]
@@ -180,12 +180,16 @@ def write(A, B, M):
             L.append(f"| {n} | {mus:.1f} | {mu:+.1f} | {sd:.1f} |")
         L.append("")
     open(os.path.join(OUT, "sweeps.md"), "w").write("\n".join(L) + "\n")
+    import json
+    json.dump(dict(A=A, B=dict(t=list(t_list), ach=list(ach_list), dh26=dh.tolist(), night=nb.tolist()),
+                   morris={o: [dict(name=n, mu_star=a, mu=b, sigma=c) for n, a, b, c in v] for o, v in M.items()}),
+              open(os.path.join(OUT, "sweeps.json"), "w"), indent=1, default=float)
     print("\n".join(L))
 
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
-    W = {v: wx.synthetic(v) for v in ("typical", "hot", "hot2050")}
+    W = {v: wx.get(v) for v in ("typical", "hot", "hot2050")}
     A = sweep_a(W); B = sweep_b(W); M = morris(W)
     write(A, B, M)
     figures(A, B, M)

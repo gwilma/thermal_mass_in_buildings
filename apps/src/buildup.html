@@ -1,0 +1,168 @@
+<title>Build-up Explorer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>{{STYLE}}</style>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Thermal mass toolkit · model 1 of 4</div>
+      <h1>Build-up Explorer</h1>
+    </div>
+    <p class="lede">Pick a common UK build-up or edit its layers. The page computes the ISO 13786 daily dynamic properties and shows how the ISO 52016 / HEM five-node lump compares for each mass class.</p>
+  </header>
+  <div class="layout">
+    <aside class="panel controls" aria-label="Build-up">
+      <div class="field"><label for="pick">Start from</label><select id="pick"></select></div>
+      <div class="row">
+        <div class="field"><label for="back">Far side</label>
+          <select id="back"><option value="ext">Outdoors</option><option value="ground">Ground (1 m soil)</option><option value="adiabatic">Adiabatic (half partition)</option><option value="room">Same room (intermediate floor)</option></select></div>
+        <div class="field"><label for="rsi">R<sub>si</sub> m²K/W</label><input id="rsi" type="number" step="0.01" min="0.04" max="0.3"></div>
+      </div>
+      <div class="field">
+        <span class="lbl">Layers, room side first (mm, or m²K/W for a cavity)</span>
+        <div class="layers" id="layers"></div>
+        <div class="row"><button class="ghost" id="addL" type="button">Add layer</button><button class="ghost" id="addR" type="button">Add cavity</button></div>
+      </div>
+      <div class="field"><label for="cls">Five-node class to highlight</label>
+        <select id="cls"><option value="auto">Library rule</option><option>I</option><option>E</option><option>IE</option><option>D</option><option>M</option></select></div>
+      <p class="note">Material values are typical design values (CIBSE Guide A, ISO 10456). Changes stay in this browser only.</p>
+    </aside>
+    <main class="results">
+      <section class="panel">
+        <div class="section-head"><h2 id="bname">–</h2><span class="eyebrow" id="bkey"></span></div>
+        <div class="section-bar" id="bar" aria-label="Section drawn to scale"></div>
+        <div class="tiles" id="tiles"></div>
+      </section>
+      <section class="split">
+        <div class="panel">
+          <h3>Admittance by period</h3>
+          <div class="chart" id="cPeriod"></div>
+          <p class="note">|Y| with the room temperature swinging sinusoidally and the far side steady. The fine mesh (2 mm cells) and the ISO 13786 closed form overlie each other.</p>
+        </div>
+        <div class="panel">
+          <h3>Five-node lump vs ISO 13786, 24 h</h3>
+          <div class="scroll"><table class="data" id="tClass"></table></div>
+          <p class="note">The class puts the total heat capacity on chosen nodes of a five-node chain (conductances 6/R<sub>c</sub>, 3/R<sub>c</sub>, 3/R<sub>c</sub>, 6/R<sub>c</sub>). A ratio far from 1 means the lump misstates the daily store.</p>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="section-head"><h2>Library</h2><span class="note">Select a row to load it.</span></div>
+        <div class="scroll"><table class="data" id="tLib"></table></div>
+      </section>
+      <div class="footer"><span>Port of models/buildups.py and models/conduction.py (gwilma/thermal_mass_in_buildings). U includes the far-side boundary; κ₁ is the ISO 13786 internal areal heat capacity.</span></div>
+    </main>
+  </div>
+</div>
+<script>{{CORE}}</script>
+<script>{{UI}}</script>
+<script>
+(() => {
+  const { $, esc, fmt } = UI;
+  const KIND = { wall: "External walls", floor: "Floors", partition: "Partitions and party walls", ceiling: "Roofs and ceilings" };
+  const MATS = Object.keys(TM.MAT).filter(m => m !== "clay soil");
+  let st = null;
+
+  // pick list grouped by kind
+  const pick = $("#pick");
+  const groups = {};
+  TM.LIB_LIST.forEach(e => (groups[e.kind] ||= []).push(e));
+  pick.innerHTML = Object.entries(groups).map(([k, es]) => `<optgroup label="${KIND[k]}">${es.map(e => `<option value="${e.key}">${e.key} · ${esc(e.name)}</option>`).join("")}</optgroup>`).join("");
+
+  function load(key) {
+    const e = TM.LIB[key];
+    st = { key, name: e.name, kind: e.kind, back: e.back, rsi: e.rsi, layers: e.layers.map(l => l.slice()) };
+    pick.value = key; render();
+    UI.store.set("bx.key", key);
+  }
+  function element() { return new TM.Element(st.key, st.name, st.kind, st.layers, st.back, { rsi: st.rsi }); }
+
+  function renderLayers() {
+    $("#layers").innerHTML = st.layers.map((l, i) => {
+      if (l.length === 2) return `<div class="layer"><input type="text" id="ln${i}" value="${esc(l[0])}" aria-label="Cavity name"><input id="lv${i}" type="number" step="0.01" min="0" value="${l[1]}" aria-label="Resistance m²K/W"><button class="ghost" data-del="${i}" type="button" aria-label="Remove layer">×</button></div>`;
+      return `<div class="layer"><select id="lm${i}" aria-label="Material">${MATS.map(m => `<option${m === l[0] ? " selected" : ""}>${esc(m)}</option>`).join("")}</select><input id="lv${i}" type="number" step="1" min="1" value="${+(l[1] * 1000).toFixed(1)}" aria-label="Thickness mm"><button class="ghost" data-del="${i}" type="button" aria-label="Remove layer">×</button></div>`;
+    }).join("");
+  }
+  $("#layers").addEventListener("change", ev => {
+    const id = ev.target.id, i = +id.slice(2);
+    if (id.startsWith("lm")) { const d = st.layers[i][1]; st.layers[i] = TM.L(ev.target.value, d); }
+    else if (id.startsWith("lv")) { const v = +ev.target.value; if (!(v > 0)) return; if (st.layers[i].length === 2) st.layers[i][1] = v; else st.layers[i] = TM.L(st.layers[i][0], v / 1000); }
+    else if (id.startsWith("ln")) st.layers[i][0] = ev.target.value;
+    custom(); compute();
+  });
+  $("#layers").addEventListener("click", ev => {
+    const b = ev.target.closest("[data-del]"); if (!b || st.layers.length < 2) return;
+    st.layers.splice(+b.dataset.del, 1); custom(); renderLayers(); compute();
+  });
+  $("#addL").onclick = () => { st.layers.push(TM.L("dense block", 0.1)); custom(); renderLayers(); compute(); };
+  $("#addR").onclick = () => { st.layers.push(TM.R("cavity", TM.AIR_CAVITY)); custom(); renderLayers(); compute(); };
+  $("#back").onchange = e => { st.back = e.target.value; custom(); compute(); };
+  $("#rsi").onchange = e => { const v = +e.target.value; if (v > 0) { st.rsi = v; custom(); compute(); } };
+  $("#cls").onchange = compute;
+  pick.onchange = () => load(pick.value);
+  function custom() { if (!st.name.startsWith("Edited: ")) st.name = "Edited: " + st.name; }
+
+  function render() {
+    $("#back").value = st.back; $("#rsi").value = st.rsi; renderLayers(); compute();
+  }
+
+  function drawBar(e) {
+    const C = UI.themeColors();
+    const tot = e.layers.reduce((a, l) => a + (l.length === 5 ? l[1] : 0.012), 0);
+    const maxRC = 2.6e6;
+    $("#bar").innerHTML = `<div style="width:6px;background:color-mix(in srgb, ${C.heat} 35%, transparent)" title="Room side"></div>` + e.layers.map(l => {
+      const w = (l.length === 5 ? l[1] : 0.012) / tot * 100;
+      if (l.length === 2) return `<div style="width:${w}%;background:repeating-linear-gradient(135deg, var(--line) 0 3px, transparent 3px 7px)" title="${esc(l[0])}: R ${l[1]} m²K/W"></div>`;
+      const rc = l[3] * l[4], a = Math.round(10 + 80 * Math.min(rc / maxRC, 1));
+      return `<div style="width:${w}%;background:color-mix(in srgb, ${C.mass} ${a}%, var(--panel));border-left:1px solid var(--panel)" title="${esc(l[0])}: ${fmt(l[1] * 1000, 1)} mm, ρc ${fmt(rc / 1e6, 2)} MJ/m³K"></div>`;
+    }).join("") + `<div style="width:6px;background:color-mix(in srgb, ${C.cool} 35%, transparent)" title="Far side"></div>`;
+  }
+
+  function compute() {
+    const e = element(), r = e.iso(), cls = $("#cls").value === "auto" ? e.cls : $("#cls").value;
+    $("#bname").textContent = st.name; $("#bkey").textContent = `${st.key} · class ${e.cls} by rule`;
+    drawBar(e);
+    const y5 = TM.admittance(e, "5node", 0.005, cls).Y;
+    const ext = st.back === "ext", hasU = ext || st.back === "ground";
+    const tiles = [
+      ["U-value", hasU ? fmt(r.U, 2) : "–", "W/m²K"],
+      ["Admittance |Y|", fmt(r.Y, 2), `W/m²K, leads ${fmt(r.Y_lead_h, 1)} h`],
+      ["κ₁ daily", fmt(r.kappa1, 0), "kJ/m²K internal"],
+      ["κ total", fmt(e.kappaTot, 0), "kJ/m²K, all layers"],
+      ["Decrement f", ext ? fmt(r.f, 2) : "–", ext ? `lag ${fmt(r.lag_h, 1)} h` : "outdoor side only"],
+      [`Five-node |Y| (${cls})`, fmt(y5, 2), `${fmt(y5 / r.Y, 2)} × ISO`],
+    ];
+    $("#tiles").innerHTML = tiles.map(([k, v, u]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="u">${u}</span></div>`).join("");
+    // class table
+    const rows = Object.keys(TM.CLASSES).map(c => { const y = TM.admittance(e, "5node", 0.005, c).Y; return [c, y, y / r.Y]; });
+    const best = rows.reduce((a, b) => Math.abs(b[2] - 1) < Math.abs(a[2] - 1) ? b : a)[0];
+    $("#tClass").innerHTML = `<thead><tr><th class="l">Class</th><th>|Y| W/m²K</th><th>÷ ISO</th><th class="l"></th></tr></thead><tbody>` +
+      rows.map(([c, y, q]) => `<tr${c === cls ? ' class="sel"' : ""}><td class="l">${c}</td><td>${fmt(y, 2)}</td><td>${fmt(q, 2)}</td><td class="l">${c === best ? '<span class="chip ok">closest</span>' : ""}${c === e.cls ? ' <span class="chip warn">rule</span>' : ""}</td></tr>`).join("") +
+      `<tr><td class="l">ISO 13786</td><td>${fmt(r.Y, 2)}</td><td>1.00</td><td class="l"></td></tr></tbody>`;
+    // period chart
+    const C = UI.themeColors(), P = Array.from({ length: 36 }, (_, i) => Math.pow(10, Math.log10(1) + i / 35 * Math.log10(168)));
+    UI.line($("#cPeriod"), {
+      xLog: true, xMin: 1, xMax: 168, yZero: true, xLabel: "period, hours", yLabel: "|Y|, W/m²K", xFmtTip: v => fmt(v, 1) + " h",
+      series: [
+        { name: "ISO 13786", x: P, y: P.map(p => e.iso(p * 3600).Y), color: C.fg, width: 2.2 },
+        { name: "Fine mesh", x: P, y: P.map(p => TM.admittance(e, "fd", 0.002, null, p * 3600).Y), color: C.cool, dash: true },
+        { name: `Five-node ${cls}`, x: P, y: P.map(p => TM.admittance(e, "5node", 0.005, cls, p * 3600).Y), color: C.heat },
+      ],
+      bands: [{ x0: 20, x1: 28, color: C.heat, opacity: 0.07 }],
+    });
+  }
+
+  function libTable() {
+    const rows = TM.LIB_LIST.map(e => Object.assign(TM.libRow(e), { y5: TM.admittance(e, "5node").Y }));
+    $("#tLib").innerHTML = `<thead><tr><th class="l">Key</th><th class="l">Build-up (room side first)</th><th class="l">Class</th><th>U</th><th>|Y|</th><th>lead h</th><th>f</th><th>lag h</th><th>κ₁</th><th>κ tot</th><th>5-node ÷ ISO</th></tr></thead><tbody>` +
+      rows.map(r => `<tr data-key="${r.key}" tabindex="0"><td class="l">${r.key}</td><td class="wrap">${esc(r.name)}</td><td class="l">${r.cls}</td><td>${fmt(r.U, 2)}</td><td>${fmt(r.Y, 2)}</td><td>${fmt(r.Y_lead_h, 1)}</td><td>${fmt(r.f, 2)}</td><td>${fmt(r.lag_h, 1)}</td><td>${fmt(r.kappa1, 0)}</td><td>${fmt(r.kappa_tot, 0)}</td><td>${(() => { const q = r.y5 / r.Y; return `<span class="chip ${q > 1.5 || q < 0.67 ? "bad" : q > 1.2 || q < 0.83 ? "warn" : "ok"}">${fmt(q, 2)}</span>`; })()}</td></tr>`).join("") + "</tbody>";
+    const go = ev => { const tr = ev.target.closest("tr[data-key]"); if (tr) { load(tr.dataset.key); scrollTo({ top: 0, behavior: "smooth" }); } };
+    $("#tLib").addEventListener("click", go);
+    $("#tLib").addEventListener("keydown", ev => { if (ev.key === "Enter") go(ev); });
+  }
+
+  libTable();
+  load(UI.store.get("bx.key", "W2") in TM.LIB ? UI.store.get("bx.key", "W2") : "W2");
+  UI.onTheme(compute);
+})();
+</script>

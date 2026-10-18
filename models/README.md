@@ -11,6 +11,8 @@ python3 packages.py     # model 3, 14 construction packages (~1 min)
 python3 sweeps.py       # model 4 (~3 min)
 ```
 
+Web apps of all four models are in `../apps` and Excel workbooks in `../excel`.
+
 Outputs go to `results/`, as Markdown tables, CSV files and PNG figures.
 
 | # | File | What it is |
@@ -18,12 +20,13 @@ Outputs go to `results/`, as Markdown tables, CSV files and PNG figures.
 | 1 | `buildups.py` | 29 build-ups (15 external walls, 4 ground floors, 3 intermediate floors, 5 partitions and party walls, 2 roofs). Each gets U, daily Y, decrement, lag, κ₁ and κ_tot, plus an ISO 52016 / HEM mass class. The class is picked by rule from where the mass sits relative to the insulation. |
 | 2 | `elements.py`, `conduction.py` | Any build-up becomes a fine-mesh finite-difference chain or a five-node lump (conductances 6/Rc, 3/Rc, 3/Rc, 6/Rc). The script compares both against ISO 13786 by period, and in the time domain on a hot day. |
 | 3 | `room.py`, `weather.py`, `packages.py` | Hourly single-zone model of a 90 m² two-storey semi. Elements can run fine-mesh or five-node. It has an air node with furniture and a radiant star node, sol-air on the walls, glazing with optional blinds, purge and night ventilation, and an intermittent heating schedule. Outputs are heating, peak load, TM59-style overheating indicators and degree-hours. `packages.py` compares 14 construction packages. |
+| 3b | `room5r1c.py` | The same house as an ISO 13790 5R1C model (one mass node), for comparison and as the engine of the Excel house workbook. |
 | 4 | `sweeps.py` | A. Thickness of an exposed dense layer from 0 to 300 mm, with the envelope held fixed. B. Mass × night-ventilation grid. C. Morris screening of eight inputs. |
 
 ## Main findings
 
-These come from synthetic weather (see the caveats), so they are relative
-results, not design numbers.
+Weather is the Heathrow TMYx 2011-2025 file, with hot and 2050s years made
+by morphing it (see the caveats). Treat the overheating numbers as relative.
 
 1. **The ISO 13786 maths is right, and the five-node lump is not reliable
    element by element.** The fine mesh converges on the ISO 13786 closed
@@ -40,41 +43,50 @@ results, not design numbers.
    still needs its source. See `results/conduction.md` and
    `fivenode_vs_fd.png`.
 2. **At whole-house level the five-node error mostly washes out.** Across the
-   14 packages, five-node minus fine mesh is within ±0.4 kWh/m² for heating
-   and ±0.3 kW for peak heating. Overheating degree-hours are within ±8%, and
-   the July swing is within about 1 K. Errors in opposite directions on
+   14 packages, five-node minus fine mesh is within -0.4 to +0.8 kWh/m² for
+   heating and -0.3 to +0.1 kW for peak heating. Overheating degree-hours are
+   within ±6% with day purge only and ±12% with night ventilation, and the
+   July swing is within about 0.8 K. Errors in opposite directions on
    different elements largely cancel. See `results/packages.md`.
-3. **For daily swing, the useful thickness is about 50 to 100 mm. Hot spells
-   keep rewarding more.** The July daily operative swing falls from 6.7 K to
-   1.8 K by t = 100 mm, then flattens. That is the 0.7 to 1.1 penetration
-   depth result. κ₁ peaks at about 100 mm. Degree-hours above 26 °C keep
-   falling to 300 mm, because a multi-day heatwave has periods long enough
-   to reach deeper mass. See `diminishing_returns.png`.
-4. **Mass only works with night ventilation, and without it mass makes
-   nights worse.** With no night ventilation, adding 100 mm of exposed mass
-   raises night hours above 26 °C from 320 to 455. With 3 ACH at night,
-   the same mass cuts them from 141 to 124, and cuts degree-hours by 62%
-   (2668 → 1018). See `mass_x_nightvent.png`.
-5. **Mass ranks below ventilation, solar control and glazing.** In the Morris
-   screening for summer degree-hours, the order is day purge > blinds >
-   glazing area > internal gains > night ventilation ≈ background
-   ventilation ≈ exposed mass. Wall insulation comes last.
-6. **Annual heating barely changes, but peak heating does.** Going from 0 to
-   300 mm of exposed mass changes annual heating by under 1 kWh/m² on about
-   26. Peak heating with intermittent heating falls 14%, from 5.45 to
-   4.69 kW. Differences in heating between packages come from U-values, not
-   mass.
+3. **A single-node 5R1C model (ISO 13790) gets heating right but under-rewards
+   deep mass in summer.** `room5r1c.py` runs the same house as one mass node.
+   Annual heating is 1% to 10% above the fine mesh. With night ventilation in
+   the hot year, it gives the heavyweight house 1208 degree-hours above 26 °C
+   against 683 from the fine mesh, and narrows the gap between lightest and
+   heaviest packages from 3.3× to 2.0×. One node cannot store a night's coolth
+   apart from the day's surface swing.
+4. **For daily swing, the useful thickness is about 50 to 100 mm. Hot spells
+   keep rewarding more.** With night ventilation, the July daily operative
+   swing falls from 5.3 K at t = 0 to 2.0 K at 50 mm and 1.6 K at 100 mm, then
+   flattens. That is the 0.7 to 1.1 penetration depth result. κ₁ peaks at
+   about 100 to 150 mm. Degree-hours above 26 °C keep falling to 300 mm
+   (2107 → 771 at 100 mm → 192), because a multi-day heatwave has periods
+   long enough to reach deeper mass. See `diminishing_returns.png`.
+5. **Mass needs night ventilation, and without it mass makes nights worse.**
+   With no night ventilation, adding exposed mass raises night hours above
+   26 °C from 225 (t = 0) to 309 (50 mm) and 289 (100 mm). With 3 ACH at
+   night, 100 mm cuts them from 105 to 93 and cuts degree-hours by 69%
+   (1972 → 617). See `mass_x_nightvent.png`.
+6. **Mass ranks below ventilation, solar control and glazing for overheating.**
+   In the Morris screening for summer degree-hours, the order is day purge >
+   blinds > glazing area > internal gains > background ventilation > exposed
+   mass > night ventilation, with wall insulation last. For peak heating,
+   mass is second only to background ventilation.
+7. **With real weather, mass saves heating as well as peak load.** Going from
+   0 to 50 mm of exposed mass cuts annual heating by 15% (23.8 → 20.2
+   kWh/m²); beyond that it flattens at about 19.9 (16%). Peak heating falls
+   29%, from 5.70 to 4.06 kW, by 150 mm. Mass lets the house use spring and
+   autumn sun that a light house dumps through the windows. Between packages,
+   U-values still dominate.
 
 ## Caveats
 
-- **Weather is synthetic.** The proxy blocked every weather host tried
-  (climate.onebuilding.org, energyplus.net, the JRC PVGIS API and the
-  Open-Meteo archive API). `weather.py` makes a London-like year from
-  approximate Heathrow monthly means. The "hot" variant adds a DSY-like
-  warm summer with a 7-day heatwave peaking at 37 °C. The "hot2050" variant
-  adds an illustrative +2.5 K in summer. `weather.read_epw()` takes real
-  CIBSE TRY/DSY or Prometheus UKCP18 EPW files, so swap them in once any
-  are available.
+- **Weather.** `weather_data/` holds the Heathrow TMYx 2011-2025 EPW from
+  climate.onebuilding.org. The "hot" year adds +1.5 K from June to August
+  and a +4 K raised-cosine heatwave over 14 to 21 July. "hot2050" adds
+  +2.5 K in summer and +1.5 K otherwise. These are morphs, not CIBSE DSY or
+  UKCP18 files; `weather.read_epw()` takes those directly once available.
+  `weather.synthetic()` is kept as a fallback.
 - The model is a single zone. TM59 criteria are meant per room, so the (a)
   and (b) figures here are indicators. There is no bedroom/living split and
   no cooling.
