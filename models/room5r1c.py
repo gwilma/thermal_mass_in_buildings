@@ -19,7 +19,7 @@ control follow room.py, using the previous hour's temperatures.
 import numpy as np
 
 import weather as wx
-from room import Room, internal_gains, ORIENT_AZ, ALPHA_SOLAR, metrics
+from room import Room, ORIENT_AZ, ALPHA_SOLAR, metrics
 
 R_SE = 0.04
 
@@ -56,12 +56,15 @@ def run(room, w):
     q_sol = np.zeros(8760)
     for o, Aw in room.windows.items():
         q_sol += Aw * (1 - p["frame"]) * p["g_win"] * np.where(irr[o] > 150, p["shade"], 1.0) * irr[o]
+    if p["q_sol"] is not None:
+        q_sol = np.asarray(p["q_sol"], float).copy()
     q_sol += sum(q["opaque_sol"][o] * irr[o] for o in "SNEW")
-    q_int = internal_gains(np.arange(8760)) * p["gains_scale"]
-    phi_ia = 0.5 * q_int
+    q_int = room.gains_series()
+    f_rad = p["gains_rad"]
+    phi_ia = (1 - f_rad) * q_int
     f_st = 1 - q["Am"] / q["At"] - H_w / (9.1 * q["At"])
-    phi_st = f_st * (0.5 * q_int + q_sol)
-    phi_m = q["Am"] / q["At"] * (0.5 * q_int + q_sol)
+    phi_st = f_st * (f_rad * q_int + q_sol)
+    phi_m = q["Am"] / q["At"] * (f_rad * q_int + q_sol)
     hod = np.arange(8760) % 24
     heat_on = ((hod >= 7) & (hod < 9)) | ((hod >= 16) & (hod < 23))
     t_set = np.where(heat_on, p["t_set"], p["t_setback"])
@@ -71,7 +74,7 @@ def run(room, w):
     for h in range(8760):
         want = T_op_prev > p["t_open"] and T_out[h] < T_air_prev
         ach = p["ach_base"] + (p["ach_day"] if want and 7 <= hod[h] < 23 else (p["ach_night"] if want and p["night_vent"] else 0.0))
-        H_ve = 0.33 * ach * q["V"]
+        H_ve = p["rho_cp"] * ach * q["V"]
         H1 = 1 / (1 / H_ve + 1 / H_is); H2 = H1 + H_w; H3 = 1 / (1 / H2 + 1 / H_ms)
         te, tsup = theta_em[h], T_out[h]
         den = Cm + 0.5 * (H3 + H_em)

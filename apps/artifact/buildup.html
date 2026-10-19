@@ -406,7 +406,7 @@ const TM = (() => {
   }
 
   // ---- weather (models/weather.py) ----------------------------------------
-  let LAT = 51.4792, LON = -0.4506;
+  let LAT = 51.4792, LON = -0.4506, TZ = 0;  // TZ: clock time zone, hours from GMT
   function solarPosition(hours) {
     const n = hours.length, cosz = new Float64Array(n), az = new Float64Array(n);
     const lat = LAT * Math.PI / 180;
@@ -415,7 +415,7 @@ const TM = (() => {
       const B = 2 * Math.PI * (doy - 81) / 364;
       const decl = 23.45 * Math.PI / 180 * Math.sin(2 * Math.PI * (284 + doy) / 365);
       const eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
-      const st = (h % 24) + (4 * LON + eot) / 60;
+      const st = (h % 24) + (4 * (LON - 15 * TZ) + eot) / 60;
       const ha = 15 * (st - 12) * Math.PI / 180;
       const cz = Math.sin(lat) * Math.sin(decl) + Math.cos(lat) * Math.cos(decl) * Math.cos(ha);
       const sz = Math.sqrt(Math.min(Math.max(1 - cz * cz, 0), 1));
@@ -438,11 +438,11 @@ const TM = (() => {
       T[i] = +p[6]; GHI[i] = +p[13]; DNI[i] = +p[14]; DHI[i] = +p[15]; i++;
     }
     if (i < 8760) throw new Error(`The file has ${i} hourly rows; an EPW year needs 8760.`);
-    return { T, GHI, DNI, DHI, lat: +hdr[6], lon: +hdr[7], name: `${hdr[1]} (${hdr[4] || "EPW"})` };
+    return { T, GHI, DNI, DHI, lat: +hdr[6], lon: +hdr[7], tz: +hdr[8] || 0, name: `${hdr[1]} (${hdr[4] || "EPW"})` };
   }
 
   function withSun(w) {
-    LAT = w.lat ?? LAT; LON = w.lon ?? LON;
+    LAT = w.lat ?? LAT; LON = w.lon ?? LON; TZ = w.tz ?? 0;
     const hours = new Float64Array(8760).map((_, i) => i + 0.5);
     const s = solarPosition(hours);
     return Object.assign({}, w, s);

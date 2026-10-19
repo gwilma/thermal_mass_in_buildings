@@ -61,6 +61,17 @@ DEFAULTS = dict(
     t_set=21.0, t_setback=16.0, q_max=6000.0,
     mode="fd", dx=0.01, dt=900.0,
     overrides=None,  # {"wall": Element, ...} to swap in a custom element
+    # Generic-zone options (the test cases use these; the house leaves them unset)
+    geometry=None,   # list of (role, Element, area, face, orientation) replacing the house layout
+    windows=None,    # {orientation: glazed area} used with geometry
+    t_cool=None,     # ideal cooling setpoint, C (None = no cooling)
+    q_cool_max=1e9,
+    gains=None,      # internal gains, W: scalar or 8760 array (None = GAINS_PROFILE)
+    gains_rad=0.5,   # radiant fraction of internal gains
+    q_sol=None,      # transmitted window solar, W, 8760 array (None = g x incident)
+    C_air=None,      # air node capacity, J/K (None = 10 kJ/K per m2 floor)
+    rho_cp=0.33,     # air heat capacity per volume, Wh/m3K
+    sky="isotropic", # diffuse sky model for sol-air and window solar ("perez" also available)
 )
 
 ORIENT_AZ = {"S": 0, "W": 90, "N": 180, "E": -90}
@@ -75,6 +86,9 @@ class Room:
     def __init__(self, package, **kw):
         p = dict(DEFAULTS); p.update(kw)
         self.p = p
+        if p["geometry"] is not None:
+            self._setup(p["geometry"], dict(p["windows"] or {}))
+            return
         pk = PACKAGES[package] if isinstance(package, str) else package
         ov = p["overrides"] or {}
         el = lambda role: ov.get(role) or LIB[pk[role]]
@@ -91,6 +105,11 @@ class Room:
                    ("part", el("part"), 2 * p["partition_area"], "single", None),
                    ("party", el("party"), p["depth"] * p["wall_h"], "single", None),
                    ("ceil", el("ceil"), A_floor, "single", None)]
+        self._setup(groups, win)
+
+    def _setup(self, groups, win):
+        p = self.p
+        self.windows = win
         self.groups = groups
         self.elements = {g[0]: g[1] for g in groups}
 
@@ -102,7 +121,7 @@ class Room:
             chains.append(ch); self.off.append(n); n += ch.n
         self.n, self.chains = n, chains
         C = np.zeros(n); G = np.zeros((n, n))
-        C[0] = 10e3 * p["floor_area"]
+        C[0] = 10e3 * p["floor_area"] if p["C_air"] is None else p["C_air"]
         self.surf = []      # (node index, area, is_floor_top)
         self.back_src = []  # (node index, conductance W/K, group index) for external/ground sides
         for gi, ((role, e, A, face, o), ch, k0) in enumerate(zip(groups, chains, self.off)):
@@ -110,7 +129,7 @@ class Room:
             C[sl] += A * ch.C
             G[sl, sl] += A * conductance_matrix(ch)
             G[k0 + ch.n - 1, k0 + ch.n - 1] -= A * ch.back_g  # added back below as a source coupling
-            faces = [(k0, e.rsi, role in ("ground", "inter"))]
+            faces = [(k0, e.rsi, role in ("ground", "inter", "floor"))]
             if face == "both":  # soffit of intermediate floor is a ceiling surface
                 faces.append((k0 + ch.n - 1, 0.10, False))
             for k, rsi, floor_top in faces:
@@ -135,7 +154,7 @@ class Room:
     def _system(self, ach):
         if ach not in self._inv:
             A = np.diag(self.C / self.p["dt"]) + self.G
-            A[0, 0] += 0.33 * ach * self.V
+            A[0, 0] += self.p["rho_cp"] * ach * self.V
             Ainv = np.linalg.inv(A)
             self._inv[ach] = (Ainv, Ainv[:, 0].copy())
         return self._inv[ach]
@@ -146,22 +165,26 @@ class Room:
         hours = np.arange(8760)
         T_out = w["T"]
         T_ground = T_out.mean()
-        irr = {o: wx.plane_irradiance(w, 90, ORIENT_AZ[o]) for o in "SNEW"}
+        irr = {o: wx.plane_irradiance(w, 90, ORIENT_AZ[o], sky=p["sky"]) for o in "SNEW"}
+        irr["H"] = wx.plane_irradiance(w, 0, 0, sky=p["sky"])
         # solar through windows (with optional blinds)
         q_sol = np.zeros(8760)
         for o, Aw in self.windows.items():
             I = irr[o]
             f_sh = np.where(I > 150, p["shade"], 1.0)
             q_sol += Aw * (1 - p["frame"]) * p["g_win"] * f_sh * I
-        q_int = internal_gains(hours) * p["gains_scale"]
+        if p["q_sol"] is not None:
+            q_sol = np.asarray(p["q_sol"], float)
+        q_int = self.gains_series()
+        f_rad = p["gains_rad"]
         # far-side temperature per back-coupled node
         back_T = []
         for kb, H, gi in self.back_src:
             role, e, A, face, o = self.groups[gi]
             if e.back == "ground":
                 back_T.append(np.full(8760, T_ground))
-            elif role == "wall":
-                back_T.append(T_out + ALPHA_SOLAR * irr[o] / H_E)
+            elif o is not None:  # sunlit outside face: sol-air temperature
+                back_T.append(T_out + ALPHA_SOLAR * irr[o] * (e.rse if e.rse > 0 else 1 / H_E))
             else:
                 back_T.append(T_out)
         back_T = np.array(back_T)
@@ -178,7 +201,8 @@ class Room:
         hod = hours % 24
         heat_on = ((hod >= 7) & (hod < 9)) | ((hod >= 16) & (hod < 23))
         t_set = np.where(heat_on, p["t_set"], p["t_setback"])
-        out = {k: np.zeros(8760) for k in ("T_air", "T_op", "T_mrt", "Q_heat", "ach")}
+        out = {k: np.zeros(8760) for k in ("T_air", "T_op", "T_mrt", "Q_heat", "Q_cool", "ach")}
+        t_cool = p["t_cool"]
         T_op_prev, T_air_prev = 20.0, 20.0
         rng = range(8760) if days is None else range(days[0] * 24, days[1] * 24)
         Cdt = self.C / dt
@@ -192,20 +216,29 @@ class Room:
                 ach += p["ach_night"]
             Ainv, u = self._system(ach)
             src = np.zeros(self.n)
-            src[0] += self.H_win * T_out[h] + 0.33 * ach * self.V * T_out[h] + 0.5 * q_int[h]
+            src[0] += self.H_win * T_out[h] + p["rho_cp"] * ach * self.V * T_out[h] + (1 - f_rad) * q_int[h]
             np.add.at(src, kb_idx, kb_H * back_T[:, h])
-            np.add.at(src, surf_idx, sol_split * q_sol[h] + rad_split * 0.5 * q_int[h])
-            acc = np.zeros(5)
+            np.add.at(src, surf_idx, sol_split * q_sol[h] + rad_split * f_rad * q_int[h])
+            acc = np.zeros(6)
             for _ in range(sub):
                 x0 = Ainv @ (Cdt * x + src)
                 Q = min(max((t_set[h] - x0[0]) / u[0], 0.0), p["q_max"])
+                if t_cool is not None and x0[0] > t_cool:
+                    Q = max((t_cool - x0[0]) / u[0], -p["q_cool_max"])
                 x = x0 + Q * u
-                acc += (x[0], 0.5 * (x[0] + x[1]), x[1], Q, ach)
+                acc += (x[0], 0.5 * (x[0] + x[1]), x[1], max(Q, 0.0), max(-Q, 0.0), ach)
             acc /= sub
-            out["T_air"][h], out["T_op"][h], out["T_mrt"][h], out["Q_heat"][h], out["ach"][h] = acc
+            out["T_air"][h], out["T_op"][h], out["T_mrt"][h], out["Q_heat"][h], out["Q_cool"][h], out["ach"][h] = acc
             T_air_prev, T_op_prev = acc[0], acc[1]
         out["T_out"] = T_out
         return out
+
+    def gains_series(self):
+        """Internal gains, W, for each hour of the year."""
+        p = self.p
+        if p["gains"] is None:
+            return internal_gains(np.arange(8760)) * p["gains_scale"]
+        return np.broadcast_to(np.asarray(p["gains"], float), (8760,)) * p["gains_scale"]
 
     def kappa_summary(self):
         """Effective (ISO 13786 kappa_1 x area) and total heat capacity per m2 floor."""

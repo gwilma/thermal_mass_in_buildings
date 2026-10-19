@@ -21,7 +21,24 @@ Outputs go to `results/`, as Markdown tables, CSV files and PNG figures.
 | 2 | `elements.py`, `conduction.py` | Any build-up becomes a fine-mesh finite-difference chain or a five-node lump (conductances 6/Rc, 3/Rc, 3/Rc, 6/Rc). The script compares both against ISO 13786 by period, and in the time domain on a hot day. |
 | 3 | `room.py`, `weather.py`, `packages.py` | Hourly single-zone model of a 90 m² two-storey semi. Elements can run fine-mesh or five-node. It has an air node with furniture and a radiant star node, sol-air on the walls, glazing with optional blinds, purge and night ventilation, and an intermittent heating schedule. Outputs are heating, peak load, TM59-style overheating indicators and degree-hours. `packages.py` compares 14 construction packages. |
 | 3b | `room5r1c.py` | The same house as an ISO 13790 5R1C model (one mass node), for comparison and as the engine of the Excel house workbook. |
+| 3c | `bestest.py` | ASHRAE Standard 140 cases 600, 900, 600FF and 900FF on the same room engine, for validation. |
 | 4 | `sweeps.py` | A. Thickness of an exposed dense layer from 0 to 300 mm, with the envelope held fixed. B. Mass × night-ventilation grid. C. Morris screening of eight inputs. |
+
+## Validation
+
+`../tests` holds 283 test cases; see `../tests/README.md`. In summary:
+
+- **ISO 13786 Annex D, case D.1:** reproduced exactly in Python, the web
+  apps and Excel.
+- **Analytical cases:** fine mesh and five-node match the classical
+  conduction solutions.
+- **ASHRAE Standard 140 (BESTEST):** `bestest.py` runs the room model on
+  Denver TMY3.
+  - Lightweight case 600: heating 4.76 MWh and cooling 6.72 MWh, both inside
+    the published ranges.
+  - Heavyweight case 900: free-float temperatures are inside the range, but
+    heating (1.88 MWh) and cooling (3.05 MWh) are 3% and 12% above it.
+  - The five-node lump overstates all loads, consistent with finding 1.
 
 ## Main findings
 

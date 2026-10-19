@@ -78,18 +78,15 @@ def _room(x):
                         night_vent=v[4] > 0, ach_night=v[4], ach_base=v[5], gains_scale=v[6])
 
 
-def morris(W, r=10, levels=4, seed=3):
+def elementary_effects(evaluate, k, outs, r=10, levels=4, seed=3, log=None):
+    """Morris (1991) one-at-a-time screening on the unit cube [0, 1]^k.
+    `evaluate(x)` returns a dict of outputs. Returns, per output, a list of
+    (mu_star, mu, sigma) per input: mean |EE|, mean EE and the population
+    standard deviation of the elementary effects (per unit of x)."""
     rng = np.random.default_rng(seed)
-    k = len(PARAMS); delta = levels / (2 * (levels - 1))
+    delta = levels / (2 * (levels - 1))
     grid = np.arange(levels) / (levels - 1)
-    outs = ("dh26", "tm59b_h", "heat_kwh_m2", "heat_peak_kw")
     ee = {o: [[] for _ in range(k)] for o in outs}
-
-    def evaluate(x):
-        mk = _room(x)
-        mh = metrics(mk().run(W["hot"])); mt = metrics(mk().run(W["typical"]))
-        return dict(dh26=mh["dh26"], tm59b_h=mh["tm59b_h"], heat_kwh_m2=mt["heat_kwh_m2"], heat_peak_kw=mt["heat_peak_kw"])
-
     for traj in range(r):
         x = rng.choice(grid[grid <= 1 - delta + 1e-9], k)
         y = evaluate(x)
@@ -99,10 +96,22 @@ def morris(W, r=10, levels=4, seed=3):
             for o in outs:
                 ee[o][i].append((y2[o] - y[o]) / (x2[i] - x[i]))
             x, y = x2, y2
-        print("Morris trajectory", traj + 1, "of", r)
-    res = {o: [(PARAMS[i][0], float(np.mean(np.abs(ee[o][i]))), float(np.mean(ee[o][i])), float(np.std(ee[o][i])))
-               for i in range(k)] for o in outs}
-    return res
+        if log:
+            log(traj)
+    return {o: [(float(np.mean(np.abs(e))), float(np.mean(e)), float(np.std(e))) for e in ee[o]] for o in outs}
+
+
+def morris(W, r=10, levels=4, seed=3):
+    outs = ("dh26", "tm59b_h", "heat_kwh_m2", "heat_peak_kw")
+
+    def evaluate(x):
+        mk = _room(x)
+        mh = metrics(mk().run(W["hot"])); mt = metrics(mk().run(W["typical"]))
+        return dict(dh26=mh["dh26"], tm59b_h=mh["tm59b_h"], heat_kwh_m2=mt["heat_kwh_m2"], heat_peak_kw=mt["heat_peak_kw"])
+
+    st = elementary_effects(evaluate, len(PARAMS), outs, r, levels, seed,
+                            log=lambda t: print("Morris trajectory", t + 1, "of", r))
+    return {o: [(PARAMS[i][0], *st[o][i]) for i in range(len(PARAMS))] for o in outs}
 
 
 def figures(A, B, M):

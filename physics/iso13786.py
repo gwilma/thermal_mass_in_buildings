@@ -45,11 +45,14 @@ def characterise(layers, rsi=RSI, rse=RSE, period=T):
     Z = mul(res_matrix(rse), Z)
     U = 1 / R
     Y11 = -Z[0][0] / Z[0][1]           # internal admittance
+    Y22 = -Z[1][1] / Z[0][1]           # external admittance
     Y12 = -1 / Z[0][1]                  # periodic thermal transmittance
     k1 = period / (2 * math.pi) * abs((Z[0][0] - 1) / Z[0][1])  # internal areal heat capacity
+    k2 = period / (2 * math.pi) * abs((Z[1][1] - 1) / Z[0][1])  # external areal heat capacity
     lead = lambda y: period / (2 * math.pi) * cmath.phase(y) / 3600
     return dict(U=U, Y=abs(Y11), Y_lead_h=lead(Y11), f=abs(Y12) / U,
-                lag_h=(-lead(Y12)) % 24, kappa1=k1 / 1000, total_C=kappa_sum / 1000)
+                lag_h=(-lead(Y12)) % 24, kappa1=k1 / 1000, total_C=kappa_sum / 1000,
+                Y22=abs(Y22), Y12=abs(Y12), kappa2=k2 / 1000, Z=Z)
 
 
 MAT = {  # d is set per build-up; lambda, rho, c from typical CIBSE/ISO 10456 values

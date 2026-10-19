@@ -22,7 +22,7 @@ and the solar position (cos zenith, azimuth from south, rad).
 import math, os
 import numpy as np
 
-LAT, LON = 51.48, -0.45  # Heathrow
+LAT, LON, TZ = 51.48, -0.45, 0.0  # Heathrow; TZ is the clock time zone, hours from GMT
 
 # Approximate Heathrow 1991-2020 monthly means (C) and mean daily ranges (K)
 T_MON = [5.6, 5.9, 8.1, 10.6, 14.0, 17.1, 19.3, 19.0, 16.1, 12.5, 8.6, 6.1]
@@ -33,12 +33,13 @@ MDAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 
 def solar_position(hours):
-    """hours: hour-of-year at mid-interval (0.5 .. 8759.5), GMT."""
+    """hours: hour-of-year at mid-interval (0.5 .. 8759.5), local standard
+    time in zone TZ (GMT for the London files)."""
     doy = hours // 24 + 1
     B = 2 * np.pi * (doy - 81) / 364
     decl = np.radians(23.45) * np.sin(2 * np.pi * (284 + doy) / 365)
     eot = 9.87 * np.sin(2 * B) - 7.53 * np.cos(B) - 1.5 * np.sin(B)  # minutes
-    solar_time = (hours % 24) + (4 * LON + eot) / 60
+    solar_time = (hours % 24) + (4 * (LON - 15 * TZ) + eot) / 60
     ha = np.radians(15 * (solar_time - 12))
     lat = math.radians(LAT)
     cosz = np.sin(lat) * np.sin(decl) + np.cos(lat) * np.cos(decl) * np.cos(ha)
@@ -171,20 +172,53 @@ def read_epw(path):
                 continue
             p = line.split(",")
             T.append(float(p[6])); ghi.append(float(p[13])); dni.append(float(p[14])); dhi.append(float(p[15]))
-    global LAT, LON
-    LAT, LON = float(hdr[6]), float(hdr[7])
+    global LAT, LON, TZ
+    LAT, LON, TZ = float(hdr[6]), float(hdr[7]), float(hdr[8])
     cosz, az, _ = solar_position(np.arange(8760) + 0.5)
     return dict(T=np.array(T[:8760]), GHI=np.array(ghi[:8760]), DNI=np.array(dni[:8760]),
                 DHI=np.array(dhi[:8760]), cosz=cosz, az=az, name=path)
 
 
-def plane_irradiance(w, tilt_deg, azimuth_deg, albedo=0.2):
-    """Isotropic-sky irradiance on a plane. azimuth from south, west positive."""
+# Perez et al. (1990) sky brightness coefficients, by clearness bin
+PEREZ_EPS = [1.065, 1.23, 1.5, 1.95, 2.8, 4.5, 6.2]
+PEREZ_F = np.array([
+    [-0.008, 0.588, -0.062, -0.060, 0.072, -0.022],
+    [0.130, 0.683, -0.151, -0.019, 0.066, -0.029],
+    [0.330, 0.487, -0.221, 0.055, -0.064, -0.026],
+    [0.568, 0.187, -0.295, 0.109, -0.152, -0.014],
+    [0.873, -0.392, -0.362, 0.226, -0.462, 0.001],
+    [1.132, -1.237, -0.412, 0.288, -0.823, 0.056],
+    [1.060, -1.600, -0.359, 0.264, -1.127, 0.131],
+    [0.678, -0.327, -0.250, 0.156, -1.377, 0.251]])
+
+
+def plane_irradiance(w, tilt_deg, azimuth_deg, albedo=0.2, sky="isotropic"):
+    """Irradiance on a plane, W/m2. azimuth from south, west positive.
+    sky="isotropic" (the default, used by the house model) or "perez"
+    (Perez 1990 anisotropic diffuse, circumsolar and horizon brightening)."""
     b = math.radians(tilt_deg); g = math.radians(azimuth_deg)
     sinz = np.sqrt(np.clip(1 - w["cosz"] ** 2, 0, 1))
     cos_inc = w["cosz"] * math.cos(b) + sinz * math.sin(b) * np.cos(w["az"] - g)
-    beam = w["DNI"] * np.clip(cos_inc, 0, None) * (w["cosz"] > 0)
-    return beam + w["DHI"] * (1 + math.cos(b)) / 2 + w["GHI"] * albedo * (1 - math.cos(b)) / 2
+    up = w["cosz"] > 0
+    beam = w["DNI"] * np.clip(cos_inc, 0, None) * up
+    ground = w["GHI"] * albedo * (1 - math.cos(b)) / 2
+    if sky == "isotropic":
+        return beam + w["DHI"] * (1 + math.cos(b)) / 2 + ground
+    zen = np.arccos(np.clip(w["cosz"], -1, 1))
+    dhi = w["DHI"]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        eps = np.where(dhi > 0, ((dhi + w["DNI"]) / dhi + 1.041 * zen ** 3) / (1 + 1.041 * zen ** 3), 1.0)
+        am = 1 / np.clip(w["cosz"], 0.0872, 1)
+        doy = np.arange(len(dhi)) // 24 + 1
+        I0 = 1361 * (1 + 0.033 * np.cos(2 * np.pi * doy / 365))
+        delta = dhi * am / I0
+    f = PEREZ_F[np.searchsorted(PEREZ_EPS, eps)]
+    F1 = np.clip(f[:, 0] + f[:, 1] * delta + f[:, 2] * zen, 0, None)
+    F2 = f[:, 3] + f[:, 4] * delta + f[:, 5] * zen
+    a = np.clip(cos_inc, 0, None); bb = np.maximum(math.cos(math.radians(85)), w["cosz"])
+    diff = dhi * ((1 - F1) * (1 + math.cos(b)) / 2 + F1 * a / bb + F2 * math.sin(b))
+    diff = np.where(up, np.clip(diff, 0, None), dhi * (1 + math.cos(b)) / 2)
+    return beam + diff + ground
 
 
 def running_mean(T, alpha=0.8):
