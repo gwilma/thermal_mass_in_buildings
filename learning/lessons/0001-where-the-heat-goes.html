@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Where the Heat Goes</title>
+<link rel="stylesheet" href="../assets/course.css">
+<script src="../assets/quiz.js" defer></script>
+</head>
+<body>
+<main class="page">
+
+<nav class="crumbs" aria-label="Course">
+  <a href="../index.html">Thermal mass: a short course</a>
+  <span>Lesson 1 of 7 &middot; about 20 minutes</span>
+</nav>
+
+<p class="eyebrow">Lesson 1 &middot; Fundamentals</p>
+<h1>Where the heat goes: four flows and one store</h1>
+<p class="lede">By the end you can write the heat balance for a room and put a number in watts on each term. That is the frame every later lesson hangs on, and the frame you'll use to judge any claim about thermal mass at ReMass.</p>
+
+<div class="practice predict" data-id="ratio" data-unit="times">
+  <span class="label">Before you read: guess</span>
+  <p>A 30&nbsp;m&sup2; office has an exposed concrete soffit. Both the room air and the top 100&nbsp;mm of the soffit warm by 2&nbsp;K over an afternoon. How many times more heat does the concrete take up than the air? Guess quickly; being wrong first helps you remember the answer.</p>
+</div>
+
+<h2>One room, five things happening</h2>
+
+<p>Picture that office on a sunny afternoon. Heat arrives from the sun and from people and computers. It leaves through the walls and with the air. Some of it goes into the fabric and comes back later. Every one of those is one of four transfer mechanisms, plus storage.</p>
+
+<figure class="wide" style="max-width: var(--col)">
+<svg viewBox="0 0 640 380" role="img" aria-labelledby="fig1t">
+  <title id="fig1t">Section through an office showing the four heat flows and the concrete soffit store</title>
+  <defs>
+    <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="8" class="dg-muted" stroke-width="1"/>
+    </pattern>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="dg-fill-heat"/>
+    </marker>
+    <marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="dg-fill-cool"/>
+    </marker>
+  </defs>
+
+  <!-- soffit slab -->
+  <rect x="40" y="40" width="460" height="56" class="dg-panel"/>
+  <rect x="40" y="40" width="460" height="56" fill="url(#hatch)"/>
+  <rect x="40" y="40" width="460" height="56" class="dg-ink" stroke-width="1.5"/>
+  <line x1="40" y1="68" x2="500" y2="68" class="dg-muted" stroke-dasharray="3 3"/>
+  <text x="52" y="30" class="dg-text">Concrete soffit, 200 mm</text>
+  <text x="300" y="30" class="dg-small">top 100 mm used in this lesson: 7,200 kJ/K</text>
+
+  <!-- floor -->
+  <rect x="40" y="300" width="460" height="24" class="dg-panel"/>
+  <rect x="40" y="300" width="460" height="24" class="dg-ink" stroke-width="1.5"/>
+  <text x="52" y="344" class="dg-small">Floor, 30 m²</text>
+
+  <!-- internal wall left -->
+  <rect x="24" y="40" width="16" height="284" class="dg-panel"/>
+  <rect x="24" y="40" width="16" height="284" class="dg-ink" stroke-width="1.5"/>
+
+  <!-- external wall right: masonry + insulation, with window -->
+  <rect x="500" y="40" width="22" height="284" class="dg-panel"/>
+  <rect x="522" y="40" width="22" height="284" class="dg-paper"/>
+  <path d="M522 50 q11 6 0 12 q11 6 0 12 q11 6 0 12 q11 6 0 12 q11 6 0 12 q11 6 0 12 q11 6 0 12 q11 6 0 12" class="dg-muted"/>
+  <path d="M522 246 q11 6 0 12 q11 6 0 12 q11 6 0 12 q11 6 0 12 q11 6 0 12 q11 6 0 12" class="dg-muted"/>
+  <rect x="500" y="40" width="44" height="284" class="dg-ink" stroke-width="1.5"/>
+  <rect x="500" y="130" width="44" height="100" class="dg-paper"/>
+  <line x1="522" y1="130" x2="522" y2="230" class="dg-ink" stroke-width="1"/>
+  <line x1="500" y1="130" x2="544" y2="130" class="dg-ink" stroke-width="1.5"/>
+  <line x1="500" y1="230" x2="544" y2="230" class="dg-ink" stroke-width="1.5"/>
+
+  <!-- sun and shortwave radiation -->
+  <circle cx="606" cy="72" r="14" class="dg-heat" stroke-width="2"/>
+  <line x1="594" y1="88" x2="300" y2="296" class="dg-heat" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#ah)"/>
+  <text x="560" y="116" class="dg-text-heat" text-anchor="end">Solar (shortwave)</text>
+  <rect x="250" y="296" width="110" height="4" class="dg-fill-heat"/>
+
+  <!-- longwave radiation from sunlit floor to soffit -->
+  <path d="M320 292 l8 -12 l-8 -12 l8 -12 l-8 -12 l8 -12 l-8 -12 l8 -12 l-8 -12 l8 -12 l-8 -12 l8 -12 l-8 -12 l8 -12 l-8 -12 l8 -12 l-8 -12 l4 -10" class="dg-heat" stroke-width="1.6" marker-end="url(#ah)"/>
+  <text x="336" y="200" class="dg-text-heat">Longwave radiation</text>
+  <text x="336" y="216" class="dg-small">surface to surface</text>
+
+  <!-- convection: warm air rising and giving heat to soffit -->
+  <path d="M150 260 C 130 220, 175 190, 150 150 S 160 110, 150 102" class="dg-heat" stroke-width="1.6" marker-end="url(#ah)"/>
+  <text x="168" y="180" class="dg-text-heat">Convection</text>
+  <text x="168" y="196" class="dg-small">air to surface</text>
+
+  <!-- conduction into slab -->
+  <line x1="236" y1="96" x2="236" y2="48" class="dg-heat" stroke-width="2.2" marker-end="url(#ah)"/>
+  <text x="246" y="62" class="dg-text-heat">Conduction</text>
+  <text x="246" y="78" class="dg-small">into the store</text>
+
+  <!-- conduction through external wall -->
+  <line x1="480" y1="280" x2="586" y2="280" class="dg-cool" stroke-width="2" marker-end="url(#ac)"/>
+  <text x="590" y="276" class="dg-text-cool">Conduction</text>
+  <text x="590" y="292" class="dg-small">U A ΔT</text>
+
+  <!-- ventilation -->
+  <path d="M600 214 C 560 214, 520 216, 470 222" class="dg-cool" stroke-width="2" marker-end="url(#ac)"/>
+  <path d="M470 146 C 520 140, 560 140, 600 142" class="dg-heat" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="604" y="168" class="dg-text-cool" text-anchor="start">Ventilation</text>
+  <text x="604" y="184" class="dg-small">air carries heat</text>
+
+  <!-- room air label -->
+  <text x="70" y="140" class="dg-text">Room air, 81 m³</text>
+  <text x="70" y="156" class="dg-small">98 kJ/K</text>
+</svg>
+<figcaption>Section through the example office: 6&nbsp;m &times; 5&nbsp;m, 2.7&nbsp;m high, exposed concrete soffit. Warm arrows carry heat into the room or its fabric; cool arrows carry it out of the building.</figcaption>
+</figure>
+
+<h2>The four flows</h2>
+
+<h3>Conduction: heat through solids</h3>
+<p>Heat moves through a solid from hot to cold at a rate set by its thermal conductivity, <var>&lambda;</var>. For a flat layer of thickness <var>d</var> this is Fourier's law<span class="sn">Fourier's law and the other three rate laws on this page are set out in chapter&nbsp;1 of Lienhard &amp; Lienhard, <a href="https://ahtt.mit.edu/">A Heat Transfer Textbook</a> (6th ed., 2024, free from MIT).</span>:</p>
+<div class="eq">
+  <div class="f"><var>q</var> = <span class="frac"><span><var>&lambda;</var> &Delta;<var>&theta;</var></span><span><var>d</var></span></span> = <span class="frac"><span>&Delta;<var>&theta;</var></span><span><var>R</var></span></span>, &nbsp;&nbsp; <var>R</var> = <var>d</var>/<var>&lambda;</var></div>
+  <div class="tag">W/m&sup2;</div>
+  <div class="where"><var>q</var> heat flux, W/m&sup2;; <var>&lambda;</var> conductivity, W/(m&middot;K); <var>d</var> thickness, m; <var>R</var> thermal resistance, m&sup2;K/W; &Delta;<var>&theta;</var> temperature difference, K.</div>
+</div>
+<p>Resistances in series add, so a whole wall becomes one number, the U-value: <var>U</var> = 1/(<var>R</var><sub>si</sub> + &Sigma;<var>d</var>/<var>&lambda;</var> + <var>R</var><sub>se</sub>), and the steady loss is <var>U A</var> &Delta;<var>&theta;</var>. A modern wall at <var>U</var> = 0.2&nbsp;W/m&sup2;K with 10&nbsp;m&sup2; exposed and a 10&nbsp;K difference loses just <span class="num">20&nbsp;W</span>. Keep that small number in mind.</p>
+
+<h3>Convection: heat between a surface and the air</h3>
+<p>Air moving over a surface picks up or gives up heat. In building calculations it is written as Newton's law of cooling, with a coefficient <var>h</var><sub>c</sub> that wraps up all the fluid mechanics:</p>
+<div class="eq">
+  <div class="f"><var>q</var> = <var>h</var><sub>c</sub> (<var>&theta;</var><sub>air</sub> &minus; <var>&theta;</var><sub>surface</sub>)</div>
+  <div class="tag">W/m&sup2;</div>
+  <div class="where">Indoors, with still air, <var>h</var><sub>c</sub> is small: roughly 1.5 to 3&nbsp;W/m&sup2;K on a wall, more when air is blown across the surface.</div>
+</div>
+<p>That small coefficient is the first hint of a bottleneck. Measured values scatter widely with air speed, surface orientation and temperature difference<span class="sn">Peeters, Beausoleil-Morrison &amp; Novoselac (2011), <em>Internal convective heat transfer modeling: critical review</em>, Energy and Buildings 43. Different simulation tools pick different correlations, one source of the model spread you'll meet in lesson&nbsp;6.</span>.</p>
+
+<h3>Radiation: heat between surfaces, through the air</h3>
+<p>Every surface emits longwave infrared. A warm sunlit floor radiates to a cooler ceiling without warming the air between them. Near room temperature the exchange is close to linear, so it is written the same way as convection<span class="sn">The linear coefficient comes from differentiating the Stefan&ndash;Boltzmann law: <var>h</var><sub>r</sub> &asymp; 4<var>&epsilon;&sigma;T</var>&sup3;. With <var>&epsilon;</var> = 0.9 and <var>T</var> = 293&nbsp;K this is 5.1&nbsp;W/m&sup2;K. Lienhard &amp; Lienhard ch.&nbsp;1 and ch.&nbsp;10.</span>:</p>
+<div class="eq">
+  <div class="f"><var>q</var> &asymp; <var>h</var><sub>r</sub> (<var>&theta;</var><sub>1</sub> &minus; <var>&theta;</var><sub>2</sub>), &nbsp;&nbsp; <var>h</var><sub>r</sub> &asymp; 5&nbsp;W/m&sup2;K</div>
+  <div class="tag">W/m&sup2;</div>
+</div>
+<p>Sunlight is radiation too, but shortwave: it passes through glass and lands as a heat patch on whatever it hits, usually the floor. That is the most direct way into a slab, with no air in the way.</p>
+
+<p>Hand calculations lump convection and longwave radiation at a room surface into one <strong>surface resistance</strong>. The standard value for a wall is <var>R</var><sub>si</sub> = 0.13&nbsp;m&sup2;K/W, which is a combined coefficient of 1/0.13 &asymp; <span class="num">7.7&nbsp;W/m&sup2;K</span><span class="sn">EN ISO 6946:2017 gives <var>R</var><sub>si</sub> = 0.10 (heat flowing up), 0.13 (horizontal) and 0.17&nbsp;m&sup2;K/W (heat flowing down). The project's <a href="https://github.com/gwilma/thermal_mass_in_buildings/blob/claude/project-thread-3p2pw2/physics/thermal-mass-physics.md">physics note</a>, section 2.2, has the breakdown.</span>.</p>
+
+<h3>Ventilation: heat carried by air</h3>
+<p>Air leaving the room takes its heat with it; air entering brings outdoor temperature in. Air holds about 1.2&nbsp;kJ per cubic metre per kelvin, which is 0.33&nbsp;Wh/m&sup3;K, hence the familiar rule<span class="sn">The 0.33 is 1.2&nbsp;kg/m&sup3; &times; 1,005&nbsp;J/kgK &divide; 3,600&nbsp;s/h, rounded down. The Open University's free course <a href="https://www.open.edu/openlearn/nature-environment/energy-buildings/content-section-3.3">Energy in buildings, section 3.3</a> derives it.</span>:</p>
+<div class="eq">
+  <div class="f"><var>&Phi;</var><sub>v</sub> &asymp; 0.33 <var>n V</var> (<var>&theta;</var><sub>in</sub> &minus; <var>&theta;</var><sub>out</sub>)</div>
+  <div class="tag">W</div>
+  <div class="where"><var>n</var> air changes per hour; <var>V</var> room volume, m&sup3;.</div>
+</div>
+
+<details class="recall">
+  <summary>Quick recall: cover the page above. Which of the four flows needs no air at all?</summary>
+  <p>Radiation, both the sun's shortwave and the longwave exchange between surfaces. Conduction needs no air either, but it runs through solids, not across the room. Convection and ventilation both work through the air.</p>
+</details>
+
+<h2>The store</h2>
+<p>Anything with mass holds heat. Warming a material by &Delta;<var>&theta;</var> stores</p>
+<div class="eq">
+  <div class="f"><var>Q</var> = <var>&rho; c</var> <var>d A</var> &Delta;<var>&theta;</var> = <var>C</var> &Delta;<var>&theta;</var></div>
+  <div class="tag">J</div>
+  <div class="where"><var>&rho;</var> density, kg/m&sup3;; <var>c</var> specific heat capacity, J/(kg&middot;K); <var>C</var> heat capacity, J/K. Dense concrete is about <var>&rho;</var> = 2,400 and <var>c</var> = 1,000, so <var>&rho;c</var> = 2.4&nbsp;MJ/m&sup3;K.</div>
+</div>
+<p>Now compare the two stores in the office. The air: 81&nbsp;m&sup3; &times; 1.2&nbsp;kJ/m&sup3;K = <span class="num">98&nbsp;kJ/K</span>. The top 100&nbsp;mm of soffit: 30&nbsp;m&sup2; &times; 0.1&nbsp;m &times; 2.4&nbsp;MJ/m&sup3;K = <span class="num">7,200&nbsp;kJ/K</span>. The concrete holds about <strong>74 times</strong> as much per kelvin. You guessed <span data-echo="ratio">(no guess locked in)</span>.</p>
+<p>Why only the top 100&nbsp;mm? Because on a daily cycle the deeper concrete barely changes temperature. Lesson&nbsp;2 shows why and how to work out that depth for any material. For now, take it as given.</p>
+
+<h2>The balance</h2>
+<p>Put the flows and the store together. Treat the room as one temperature <var>&theta;</var><sub>i</sub>, the outside as <var>&theta;</var><sub>e</sub>, and group the losses into one heat loss coefficient <var>H</var> (W/K):</p>
+<div class="eq">
+  <div class="f"><var>&Phi;</var><sub>gains</sub> = <var>H</var> (<var>&theta;</var><sub>i</sub> &minus; <var>&theta;</var><sub>e</sub>) + <var>C</var> <span class="frac"><span>d<var>&theta;</var><sub>i</sub></span><span>d<var>t</var></span></span>, &nbsp;&nbsp; <var>H</var> = &Sigma;<var>UA</var> + 0.33<var>nV</var></div>
+  <div class="tag">W</div>
+  <div class="where">Gains in = heat leaking out + heat going into storage.</div>
+</div>
+
+<div class="key">
+  <span class="label">The idea to keep</span>
+  <p>The storage term is <var>C</var> times the <em>rate of change</em> of temperature. If the temperature doesn't move, the mass stores nothing, however much of it there is.</p>
+</div>
+
+<p>That gives the three conditions this course is built on. Thermal mass only does useful work when there is <strong>capacity</strong> (this lesson), <strong>access</strong> for heat to get in and out in time (lessons 2 to 4), and a <strong>temperature swing</strong> to drive it (lessons 5 and 7)<span class="sn">The same three conditions open the project's physics note, section&nbsp;1.</span>.</p>
+
+<h2>Practice: size the terms</h2>
+<p>Work these on paper first. Use the office above. Feedback is immediate, and the working appears once you're right or after you ask.</p>
+
+<div class="practice">
+<span class="label">Exercise 1 &middot; storage</span>
+<div class="calc" id="ex1" data-answer="4.0" data-tol="0.05" data-unit="kWh">
+  <p>Over the afternoon the top 100&nbsp;mm of the 30&nbsp;m&sup2; soffit warms by 2&nbsp;K. How much heat has it stored, in kWh?</p>
+  <div class="working"><p><var>Q</var> = 7,200&nbsp;kJ/K &times; 2&nbsp;K = 14,400&nbsp;kJ = 14.4&nbsp;MJ. Since 1&nbsp;kWh = 3.6&nbsp;MJ, <var>Q</var> = <strong>4.0&nbsp;kWh</strong>. The room air over the same 2&nbsp;K takes 0.2&nbsp;MJ, or 0.05&nbsp;kWh.</p></div>
+</div>
+</div>
+
+<div class="practice">
+<span class="label">Exercise 2 &middot; surface exchange</span>
+<div class="calc" id="ex2" data-answer="690" data-tol="0.05" data-unit="W">
+  <p>The room sits 3&nbsp;K warmer than the soffit surface. Using <var>R</var><sub>si</sub> = 0.13&nbsp;m&sup2;K/W, how fast does heat flow into the 30&nbsp;m&sup2; soffit, in watts?</p>
+  <div class="working"><p><var>q</var> = 3&nbsp;K &divide; 0.13 = 23&nbsp;W/m&sup2;. Over 30&nbsp;m&sup2; that is <strong>about 690&nbsp;W</strong>.</p></div>
+</div>
+</div>
+
+<div class="practice">
+<span class="label">Exercise 3 &middot; put them together</span>
+<div class="calc" id="ex3" data-answer="5.8" data-tol="0.06" data-unit="hours">
+  <p>At that rate, how many hours does it take to put the 4.0&nbsp;kWh from exercise&nbsp;1 into the soffit?</p>
+  <div class="working"><p>4.0&nbsp;kWh &divide; 0.69&nbsp;kW = <strong>5.8&nbsp;hours</strong>, most of a working day. The concrete could hold heat faster than that; the thin film of air at its surface is what sets the pace. Lesson&nbsp;3 is about this throttle.</p></div>
+</div>
+</div>
+
+<div class="practice">
+<span class="label">Exercise 4 &middot; ventilation</span>
+<div class="calc" id="ex4" data-answer="640" data-tol="0.06" data-unit="W">
+  <p>At night the windows are opened to 4 air changes per hour, and outside air is 6&nbsp;K cooler than the room. How much heat does the air carry away, in watts?</p>
+  <div class="working"><p>0.33 &times; 4 &times; 81&nbsp;m&sup3; &times; 6&nbsp;K = <strong>about 640&nbsp;W</strong>. That is the same order as the 690&nbsp;W the soffit can give up through its surface. Night cooling is a chain of two links, and the weaker one sets the rate. Compare the 20&nbsp;W through the wall: in a well-insulated building, ventilation and surface exchange are the flows that matter for mass.</p></div>
+</div>
+</div>
+
+<h2>Check your recall</h2>
+<p>Answer from memory. Options are shuffled each time you load the page.</p>
+<div class="practice">
+<p class="score"></p>
+
+<div class="q" data-answer="1">
+  <p class="q-stem">In the office, which heat store hardly matters over an afternoon?</p>
+  <ol class="q-options">
+    <li>The room air</li>
+    <li>The floor slab</li>
+    <li>The soffit slab</li>
+    <li>The block walls</li>
+  </ol>
+  <div class="q-why">The air holds about 98&nbsp;kJ/K against 7,200&nbsp;kJ/K in the top 100&nbsp;mm of soffit. Air sets how fast heat moves, not how much is stored.</div>
+</div>
+
+<div class="q" data-answer="3">
+  <p class="q-stem">An office is held at exactly 21&nbsp;&deg;C day and night by its heating and cooling. Roughly how much heat does its slab take in and give back each day?</p>
+  <ol class="q-options">
+    <li>About four kWh</li>
+    <li>About forty kWh</li>
+    <li>About zero kWh</li>
+    <li>About one kWh</li>
+  </ol>
+  <div class="q-why">The storage term is <var>C</var>&nbsp;d<var>&theta;</var>/d<var>t</var>. With no temperature change there is nothing to drive heat in or out, so the mass does almost nothing. This is the third condition: mass needs a swing.</div>
+</div>
+
+<div class="q" data-answer="2">
+  <p class="q-stem">A surface resistance of 0.13&nbsp;m&sup2;K/W is the same as a combined surface coefficient of about:</p>
+  <ol class="q-options">
+    <li>1.3 W/m&sup2;K</li>
+    <li>7.7 W/m&sup2;K</li>
+    <li>5.0 W/m&sup2;K</li>
+    <li>3.3 W/m&sup2;K</li>
+  </ol>
+  <div class="q-why">1 &divide; 0.13 = 7.7&nbsp;W/m&sup2;K: roughly 5 from longwave radiation and 2.5 from convection.</div>
+</div>
+
+<div class="q" data-answer="4">
+  <p class="q-stem">What does 0.33&nbsp;<var>nV</var>&nbsp;&Delta;<var>&theta;</var> calculate?</p>
+  <ol class="q-options">
+    <li>Heat through the wall</li>
+    <li>Heat into the slab</li>
+    <li>Heat from the people</li>
+    <li>Heat carried by air</li>
+  </ol>
+  <div class="q-why">It is the ventilation heat flow. 0.33&nbsp;Wh/m&sup3;K is the heat capacity of air.</div>
+</div>
+
+<div class="q" data-answer="1">
+  <p class="q-stem">In exercise 3, what limited how fast the soffit could charge?</p>
+  <ol class="q-options">
+    <li>The surface film resistance</li>
+    <li>The concrete's specific heat</li>
+    <li>The air's heat capacity</li>
+    <li>The slab's overall thickness</li>
+  </ol>
+  <div class="q-why">The surface resistance of 0.13&nbsp;m&sup2;K/W allowed only 23&nbsp;W/m&sup2; for a 3&nbsp;K difference. Doubling the concrete would not change that rate.</div>
+</div>
+</div>
+
+<div class="source">
+  <span class="label">Primary source for this lesson</span>
+  <span class="title">Lienhard &amp; Lienhard, <em>A Heat Transfer Textbook</em>, 6th edition, chapter&nbsp;1</span>
+  <span>Free from the authors at <a href="https://ahtt.mit.edu/">ahtt.mit.edu</a>. Chapter&nbsp;1 sets out conduction, convection and radiation from first principles, with the same rate laws used here. It is written for mechanical engineers, so skip the heat exchanger material. For the building view of U-values and ventilation, the Open University's free <a href="https://www.open.edu/openlearn/nature-environment/energy-buildings/content-section-0">Energy in buildings</a> course, sections 2 and 3, is shorter.</span>
+</div>
+
+<div class="ask">
+  <span class="label">Ask me</span>
+  <p>Anything unclear, or something you'd want to argue with? Reply in the thread. I can rework an explanation, add more practice, or go deeper on one term. Tell me how the exercises went, too: that decides where lesson&nbsp;2 starts.</p>
+</div>
+
+<p>Come back tomorrow before starting lesson&nbsp;2 and try the recall questions again with the page closed. Spaced retrieval is what makes this stick.</p>
+
+<h2>References</h2>
+<ol class="refs">
+  <li>Lienhard, J.H. IV &amp; Lienhard, J.H. V (2024). <em>A Heat Transfer Textbook</em>, 6th ed. Phlogiston Press. <a href="https://ahtt.mit.edu/">ahtt.mit.edu</a></li>
+  <li>EN ISO 6946:2017. <em>Building components and building elements: thermal resistance and thermal transmittance</em>, section 5.2 and annex on surface resistances.</li>
+  <li>The Open University. <em>Energy in buildings</em> (OpenLearn). <a href="https://www.open.edu/openlearn/nature-environment/energy-buildings/content-section-3.3">Section 3.3</a>.</li>
+  <li>Peeters, L., Beausoleil-Morrison, I. &amp; Novoselac, A. (2011). Internal convective heat transfer modeling: critical review and discussion of experimentally derived correlations. <em>Energy and Buildings</em> 43.</li>
+  <li>Project note: <a href="https://github.com/gwilma/thermal_mass_in_buildings/blob/claude/project-thread-3p2pw2/physics/thermal-mass-physics.md">The physics of thermal mass in operation</a>, sections 1, 2.2 and 2.3.</li>
+</ol>
+
+<nav class="pager">
+  <a href="../index.html">&larr; Course map</a>
+  <a href="../reference/heat-balance.html">Reference sheet: the heat balance &rarr;</a>
+</nav>
+
+</main>
+</body>
+</html>

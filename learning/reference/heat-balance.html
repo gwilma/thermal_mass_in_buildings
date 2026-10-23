@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Heat Balance Sheet</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="page">
+
+<nav class="crumbs" aria-label="Course">
+  <a href="../index.html">Thermal mass: a short course</a>
+  <span>Reference &middot; from lesson 1</span>
+</nav>
+
+<p class="eyebrow">Reference sheet</p>
+<h1>The room heat balance</h1>
+<p class="lede">Four flows, one store, and the numbers to sanity-check them. Prints on one page.</p>
+
+<h2>Rate laws</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Flow</th><th>Formula</th><th>Typical size indoors</th></tr></thead>
+  <tbody>
+    <tr><td>Conduction through a layer</td><td><var>q</var> = <var>&lambda;</var>&Delta;<var>&theta;</var>/<var>d</var> = &Delta;<var>&theta;</var>/<var>R</var></td><td>Wall at U&nbsp;0.2, 10&nbsp;K: 2&nbsp;W/m&sup2;</td></tr>
+    <tr><td>Through an element</td><td><var>&Phi;</var> = <var>UA</var>&Delta;<var>&theta;</var>, &nbsp;<var>U</var> = 1/(<var>R</var><sub>si</sub> + &Sigma;<var>d</var>/<var>&lambda;</var> + <var>R</var><sub>se</sub>)</td><td></td></tr>
+    <tr><td>Convection, surface &harr; air</td><td><var>q</var> = <var>h</var><sub>c</sub>(<var>&theta;</var><sub>air</sub> &minus; <var>&theta;</var><sub>s</sub>)</td><td><var>h</var><sub>c</sub> &asymp; 1.5&ndash;3&nbsp;W/m&sup2;K still air</td></tr>
+    <tr><td>Longwave radiation, surface &harr; surface</td><td><var>q</var> &asymp; <var>h</var><sub>r</sub>(<var>&theta;</var><sub>1</sub> &minus; <var>&theta;</var><sub>2</sub>), &nbsp;<var>h</var><sub>r</sub> &asymp; 4<var>&epsilon;&sigma;T</var>&sup3;</td><td><var>h</var><sub>r</sub> &asymp; 5&nbsp;W/m&sup2;K</td></tr>
+    <tr><td>Combined at a room surface</td><td><var>q</var> = &Delta;<var>&theta;</var>/<var>R</var><sub>si</sub></td><td><var>R</var><sub>si</sub> 0.10 up / 0.13 horizontal / 0.17 down&nbsp;m&sup2;K/W</td></tr>
+    <tr><td>Ventilation</td><td><var>&Phi;</var><sub>v</sub> = 0.33&nbsp;<var>nV</var>&Delta;<var>&theta;</var></td><td>Air: 1.2&nbsp;kJ/m&sup3;K = 0.33&nbsp;Wh/m&sup3;K</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Storage</h2>
+<div class="eq">
+  <div class="f"><var>Q</var> = <var>&rho;c</var>&thinsp;<var>dA</var>&thinsp;&Delta;<var>&theta;</var> = <var>C</var>&Delta;<var>&theta;</var>, &nbsp;&nbsp; storage rate = <var>C</var>&thinsp;d<var>&theta;</var>/d<var>t</var></div>
+  <div class="tag">J, W</div>
+</div>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Material</th><th class="r">&rho; kg/m&sup3;</th><th class="r">c J/kgK</th><th class="r">&rho;c MJ/m&sup3;K</th><th class="r">&lambda; W/mK</th></tr></thead>
+  <tbody>
+    <tr><td>Dense concrete</td><td class="r">2400</td><td class="r">1000</td><td class="r">2.4</td><td class="r">2.0</td></tr>
+    <tr><td>Brick</td><td class="r">1700</td><td class="r">800</td><td class="r">1.4</td><td class="r">0.77</td></tr>
+    <tr><td>Dense block</td><td class="r">2000</td><td class="r">1000</td><td class="r">2.0</td><td class="r">1.13</td></tr>
+    <tr><td>Plasterboard</td><td class="r">700</td><td class="r">1000</td><td class="r">0.7</td><td class="r">0.21</td></tr>
+    <tr><td>CLT (softwood)</td><td class="r">470</td><td class="r">1600</td><td class="r">0.75</td><td class="r">0.13</td></tr>
+    <tr><td>Air</td><td class="r">1.2</td><td class="r">1005</td><td class="r">0.0012</td><td class="r">0.025</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="sn" style="float:none;width:auto;margin:0">Typical book values, as used in the project's ISO 13786 calculator. Use design values from EN ISO 10456 or manufacturers for real work.</p>
+
+<h2>The balance</h2>
+<div class="eq">
+  <div class="f"><var>&Phi;</var><sub>gains</sub> = <var>H</var>(<var>&theta;</var><sub>i</sub> &minus; <var>&theta;</var><sub>e</sub>) + <var>C</var>&thinsp;d<var>&theta;</var><sub>i</sub>/d<var>t</var>, &nbsp;&nbsp; <var>H</var> = &Sigma;<var>UA</var> + 0.33<var>nV</var></div>
+  <div class="tag">W</div>
+</div>
+
+<h2>Rules of thumb</h2>
+<ul>
+  <li>Mass stores nothing unless its temperature changes. It needs <strong>capacity</strong>, <strong>access</strong> and a <strong>swing</strong>.</li>
+  <li>Room air stores almost nothing: a 30&nbsp;m&sup2; office's air is about 1/70 of the top 100&nbsp;mm of its concrete soffit.</li>
+  <li>The surface film limits charging: 1/<var>R</var><sub>si</sub> &asymp; 7.7&nbsp;W/m&sup2;K, so 3&nbsp;K drives only 23&nbsp;W/m&sup2;.</li>
+  <li>In well-insulated buildings, ventilation and surface exchange dwarf fabric conduction.</li>
+  <li>1&nbsp;kWh = 3.6&nbsp;MJ.</li>
+</ul>
+
+<nav class="pager">
+  <a href="../lessons/0001-where-the-heat-goes.html">&larr; Lesson 1</a>
+  <a href="../index.html">Course map &rarr;</a>
+</nav>
+</main>
+</body>
+</html>

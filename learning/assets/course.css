@@ -1,0 +1,241 @@
+/* Thermal mass course: shared stylesheet for every lesson and reference page.
+   Layout: one reading column (~65ch) with a right margin for sidenotes, like an
+   engineer's annotated notebook. Warm hue = heat going in; cool hue = heat going out. */
+
+@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+:root {
+  --paper: #f4f6f7;
+  --ink: #1b2430;
+  --muted: #5a6875;
+  --rule: #d3dae0;
+  --panel: #e8edf0;
+  --heat: #b3261e;
+  --cool: #1f5fa6;
+  --good: #2f7a3e;
+  --warn: #9a5b00;
+
+  --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --label: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --step--1: 0.86rem;
+  --step-0: 1.06rem;
+  --step-1: 1.3rem;
+  --step-2: 1.7rem;
+  --step-3: 2.3rem;
+
+  --col: 40rem;
+  --margin: 16rem;
+  --gap: 2.5rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #12171c; --ink: #e2e7eb; --muted: #95a3af; --rule: #2b343d; --panel: #1b2229;
+    --heat: #f07a6a; --cool: #74aaea; --good: #6cc07c; --warn: #e2a53c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #12171c; --ink: #e2e7eb; --muted: #95a3af; --rule: #2b343d; --panel: #1b2229;
+  --heat: #f07a6a; --cool: #74aaea; --good: #6cc07c; --warn: #e2a53c;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 2rem 4rem;
+}
+
+/* ---- page frame ---- */
+.page { max-width: calc(var(--col) + var(--gap) + var(--margin)); margin: 0 auto; }
+.page > * { max-width: var(--col); }
+.page > .wide { max-width: none; }
+
+.crumbs {
+  display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; justify-content: space-between;
+  font-family: var(--label); font-size: var(--step--1); letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--muted);
+  border-bottom: 1px solid var(--rule); padding-bottom: 0.6rem; margin-bottom: 2.2rem;
+}
+.crumbs a { color: inherit; }
+
+h1, h2, h3 { text-wrap: balance; line-height: 1.2; font-weight: 600; }
+h1 { font-size: var(--step-3); margin: 0 0 0.6rem; letter-spacing: -0.01em; }
+h2 { font-size: var(--step-2); margin: 2.8rem 0 0.8rem; }
+h3 { font-size: var(--step-1); margin: 2rem 0 0.5rem; }
+.eyebrow {
+  font-family: var(--label); font-size: var(--step--1); text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--heat); margin: 0 0 0.4rem;
+}
+.lede { font-size: var(--step-1); line-height: 1.45; color: var(--muted); margin-top: 0; }
+p { margin: 0 0 1rem; }
+a { color: var(--cool); text-underline-offset: 0.15em; }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--cool); outline-offset: 2px;
+}
+strong { font-weight: 600; }
+.heat { color: var(--heat); }
+.cool { color: var(--cool); }
+.num, .mono { font-family: var(--mono); font-size: 0.92em; font-variant-numeric: tabular-nums; }
+var { font-style: italic; font-family: var(--serif); }
+
+/* ---- sidenotes: margin column on wide screens, inline panel when narrow ---- */
+.sn {
+  font-size: var(--step--1); line-height: 1.45; color: var(--muted);
+  display: block; margin: 0.4rem 0 1rem; padding-left: 0.8rem; border-left: 2px solid var(--rule);
+}
+.sn-ref { font-family: var(--label); font-size: 0.75em; vertical-align: super; color: var(--heat); }
+@media (min-width: 60rem) {
+  .page > p, .page > .eq, .page > ul, .page > ol, .page > figure, .page > .key { position: relative; }
+  .sn {
+    float: right; clear: right; width: var(--margin);
+    margin: 0.2rem calc(-1 * (var(--margin) + var(--gap))) 1rem 0;
+    padding-left: 0; border-left: 0;
+  }
+}
+
+/* ---- equations ---- */
+.eq {
+  margin: 1.2rem 0 1.4rem; padding: 0.9rem 1rem;
+  background: var(--panel); border-radius: 4px;
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.5rem 1rem;
+}
+.eq .f { font-size: 1.18rem; text-align: center; overflow-x: auto; white-space: nowrap; }
+.eq .tag { font-family: var(--label); font-size: var(--step--1); color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.eq .where { grid-column: 1 / -1; font-size: var(--step--1); color: var(--muted); }
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 0.15em; }
+.frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 0.2em; }
+.frac > span { line-height: 1.25; }
+
+/* ---- key idea ---- */
+.key {
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
+  padding: 0.8rem 0 0.6rem; margin: 1.8rem 0;
+}
+.key .label {
+  font-family: var(--label); font-size: var(--step--1); text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted); display: block; margin-bottom: 0.2rem;
+}
+.key p:last-child { margin-bottom: 0; }
+.key p { font-size: var(--step-1); line-height: 1.4; }
+
+/* ---- figures and tables ---- */
+figure { margin: 1.6rem 0; }
+figure svg { width: 100%; height: auto; display: block; }
+figcaption { font-size: var(--step--1); color: var(--muted); margin-top: 0.4rem; }
+.table-wrap { overflow-x: auto; margin: 1.2rem 0 1.6rem; }
+table { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+th, td { text-align: left; padding: 0.45rem 0.7rem 0.45rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--label); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-size: 0.8rem; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---- retrieval and practice components (driven by quiz.js) ---- */
+.practice {
+  border: 1px solid var(--rule); border-radius: 6px; padding: 1.1rem 1.2rem 0.6rem;
+  margin: 1.4rem 0; background: var(--paper);
+}
+.practice > .label {
+  font-family: var(--label); font-size: var(--step--1); text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted); display: block; margin-bottom: 0.4rem;
+}
+.q { padding: 0.4rem 0 1rem; border-bottom: 1px solid var(--rule); margin-bottom: 1rem; }
+.q:last-of-type { border-bottom: 0; margin-bottom: 0; }
+.q-stem { margin-bottom: 0.6rem; }
+.q-options { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.45rem; }
+.q-options button {
+  width: 100%; text-align: left; font: inherit; font-size: var(--step-0); color: var(--ink);
+  background: var(--panel); border: 1px solid transparent; border-radius: 4px;
+  padding: 0.55rem 0.8rem; cursor: pointer;
+}
+.q-options button:hover:not(:disabled) { border-color: var(--muted); }
+.q-options button:disabled { cursor: default; }
+.q-options button.is-right { border-color: var(--good); box-shadow: inset 4px 0 0 var(--good); }
+.q-options button.is-wrong { border-color: var(--heat); box-shadow: inset 4px 0 0 var(--heat); opacity: 0.85; }
+.q-why { margin-top: 0.7rem; font-size: var(--step--1); color: var(--muted); }
+.q-verdict { font-family: var(--label); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.8rem; margin-right: 0.4rem; }
+.q-verdict.ok { color: var(--good); }
+.q-verdict.no { color: var(--heat); }
+
+.calc-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.4rem 0 0.6rem; }
+.calc-row input {
+  font: inherit; font-family: var(--mono); width: 8.5rem; padding: 0.45rem 0.6rem;
+  border: 1px solid var(--muted); border-radius: 4px; background: var(--paper); color: var(--ink);
+}
+.calc-row .unit { font-family: var(--mono); color: var(--muted); }
+.btn {
+  font-family: var(--label); font-size: 0.9rem; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 0.5rem 0.9rem; border-radius: 4px; border: 1px solid var(--ink);
+  background: var(--ink); color: var(--paper); cursor: pointer;
+}
+.btn.ghost { background: transparent; color: var(--ink); }
+.feedback { font-size: var(--step--1); min-height: 1.2em; margin: 0 0 0.6rem; }
+.feedback.ok { color: var(--good); }
+.feedback.no { color: var(--heat); }
+.working { font-size: var(--step--1); background: var(--panel); border-radius: 4px; padding: 0.7rem 0.9rem; margin: 0.4rem 0 1rem; }
+.working p:last-child { margin-bottom: 0; }
+.score { font-family: var(--label); letter-spacing: 0.04em; color: var(--muted); font-size: var(--step--1); margin: 0.6rem 0; }
+
+details.recall { border-left: 2px solid var(--cool); padding: 0.2rem 0 0.2rem 0.9rem; margin: 1rem 0 1.4rem; }
+details.recall summary { cursor: pointer; font-family: var(--label); letter-spacing: 0.03em; color: var(--cool); }
+details.recall[open] summary { margin-bottom: 0.5rem; }
+
+/* ---- source box and ask-me footer ---- */
+.source {
+  display: grid; gap: 0.3rem; padding: 1rem 1.1rem; margin: 2.4rem 0 1.2rem;
+  border: 1px solid var(--rule); border-radius: 6px;
+}
+.source .label, .ask .label {
+  font-family: var(--label); font-size: var(--step--1); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+}
+.source .title { font-size: var(--step-1); font-weight: 600; }
+.ask { padding: 1rem 0; border-top: 1px solid var(--rule); color: var(--muted); }
+.pager { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; font-family: var(--label); letter-spacing: 0.03em; }
+.refs { font-size: var(--step--1); color: var(--muted); padding-left: 1.2rem; }
+.refs li { margin-bottom: 0.35rem; }
+
+/* ---- SVG diagram tokens ---- */
+.dg-ink { stroke: var(--ink); fill: none; }
+.dg-fill-ink { fill: var(--ink); }
+.dg-muted { stroke: var(--muted); fill: none; }
+.dg-text { fill: var(--ink); font-family: var(--label); font-size: 13px; }
+.dg-small { fill: var(--muted); font-family: var(--label); font-size: 11.5px; }
+.dg-heat { stroke: var(--heat); fill: none; }
+.dg-cool { stroke: var(--cool); fill: none; }
+.dg-fill-heat { fill: var(--heat); }
+.dg-fill-cool { fill: var(--cool); }
+.dg-text-heat { fill: var(--heat); font-family: var(--label); font-size: 13px; }
+.dg-text-cool { fill: var(--cool); font-family: var(--label); font-size: 13px; }
+.dg-panel { fill: var(--panel); }
+.dg-paper { fill: var(--paper); }
+
+/* ---- course map ---- */
+.map { list-style: none; padding: 0; margin: 1.5rem 0; counter-reset: none; }
+.map li { display: grid; grid-template-columns: 3rem 1fr; gap: 0 1rem; padding: 0.9rem 0; border-bottom: 1px solid var(--rule); }
+.map .n { font-family: var(--mono); color: var(--muted); padding-top: 0.15rem; }
+.map .t { font-weight: 600; }
+.map .d { grid-column: 2; font-size: var(--step--1); color: var(--muted); }
+.map .status { font-family: var(--label); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; margin-left: 0.4rem; color: var(--good); }
+.map .status.todo { color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+@media print {
+  :root { --paper: #fff; --ink: #000; --muted: #444; --panel: #f1f1f1; }
+  body { padding: 0; font-size: 10.5pt; }
+  .page > * { max-width: none; }
+  .sn { float: none; width: auto; margin: 0.2rem 0 0.8rem; padding-left: 0.6rem; border-left: 1px solid #999; }
+  .btn, .calc-row, .feedback, .pager, .crumbs { display: none; }
+  .q-why, .working { display: block !important; }
+  a { color: inherit; }
+}
