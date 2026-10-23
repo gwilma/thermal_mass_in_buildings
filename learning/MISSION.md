@@ -1,28 +1,38 @@
 # Mission: Thermal mass and building physics
 
-_Draft, 2026-10-23. Inferred from the project; waiting for Gwilym to confirm or change it._
+_Confirmed by Gwilym, 2026-10-23: "Both A, B, and C. I don't just want to be able to defend numbers, I want a full understanding of the topic."_
 
 ## Why
 
-Gwilym presents "Thermal mass in current engineering practice" at the ReMass workshop, Wolfson College Oxford, on 29 October 2026. He wants to own the physics behind the talk himself: to explain it from first principles, put numbers on it by hand, and hold his own with researchers who model and measure thermal mass.
+Gwilym wants a full, first-principles understanding of thermal mass in buildings. He wants it for three uses at once. First, his ReMass talk ("Thermal mass in current engineering practice", Oxford, 29 October 2026), where he wants to hold his own with researchers. Second, judging thermal mass in real projects as an engineer. Third, building and auditing models of it himself.
 
 ## Success looks like
 
-- Writes the heat balance for a room and sizes each term in watts without notes.
-- Works out penetration depth, admittance and a time constant for a real build-up, and explains what each number means.
-- Explains why only the first ~100 mm of dense material works on a daily cycle, and why the surface coefficient caps the benefit.
-- Reads ISO 13786 outputs (Y, kappa_1, decrement, lag) and knows what linings and finishes do to them.
-- Describes how the admittance method, 5R1C, HEM's five-node elements and finite difference represent mass, and where each goes wrong.
-- Names the conditions under which mass does not help, with evidence.
+Physics (the core)
+- Writes the room heat balance and sizes each term in watts without notes.
+- Derives the heat diffusion equation and explains penetration depth, effusivity and diffusivity from it.
+- Calculates admittance, kappa_1, decrement factor and time lag for a build-up, and explains what each one means physically.
+- Explains the time constant tau = C/H and how much a building attenuates swings.
+
+Practice
+- Estimates peak summer temperatures and the effect of exposing mass or night ventilation by hand, before modelling.
+- Reads overheating results (TM59, TM52) and model outputs critically, and spots when a claimed mass benefit won't happen.
+- Knows when mass helps and when it hurts (constant setpoints, warm nights, bedrooms, intermittent heating), with evidence.
+
+Modelling
+- Builds a finite-difference wall model and an RC zone model from scratch and checks them against ISO 13786 Annex D.
+- Explains how the admittance method, 5R1C, ISO 52016 and HEM's five-node elements represent mass, and where each goes wrong.
+- Audits the project's own models and code.
 
 ## Constraints
 
-- Six days to the talk (as of 2026-10-23): lessons must be short, about 20 minutes each.
+- The ReMass talk is on 29 October, so Part A (the physics) comes first and fits in about six days. Parts B and C run after.
+- Lessons stay short (about 20 minutes) even though the course is long.
 - Web pages can't be fetched from the teaching environment; facts come from the project's checked notes and models, plus web search.
-- Gwilym works in building services engineering (Max Fordham), so practice examples should look like engineering problems.
+- Gwilym works in building services engineering (Max Fordham), so examples should look like engineering problems.
 
 ## Out of scope
 
-- Moisture and hygrothermal modelling beyond a mention.
+- Hygrothermal (moisture) modelling beyond a mention.
 - Phase change materials in depth.
 - Embodied carbon calculation methods (only as a limit on adding mass).

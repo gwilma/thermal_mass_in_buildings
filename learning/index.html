@@ -5,16 +5,17 @@
 <main class="page">
 
 <nav class="crumbs" aria-label="Course">
-  <span>Thermal mass: a short course</span>
+  <span>Thermal mass and building physics</span>
   <span>For Gwilym &middot; October 2026</span>
 </nav>
 
 <p class="eyebrow">Course map</p>
 <h1>Thermal mass and building physics</h1>
-<p class="lede">Seven short lessons, from the four ways heat moves to the limits of what mass can do. Each one ends with practice that checks itself, and each feeds a one-page reference sheet.</p>
+<p class="lede">Twenty short lessons in three parts: the physics, using it in practice, and building the models yourself. Each lesson ends with practice that checks itself, and each feeds a one-page reference sheet.</p>
 
-<p>The aim is to own the physics behind your ReMass talk: to explain it from first principles, put numbers on it by hand, and spot when a model or a claim about mass doesn't hold up. The order below is a draft. It shifts as we find out what you already know.</p>
+<p>The aim is a full understanding of thermal mass, from first principles to real projects and your own code. Part A comes first so the physics is in place before ReMass on 29 October. The order is a draft and will shift as we find out what you already know.</p>
 
+<h2>Part A &middot; The physics</h2>
 <ol class="map">
   <li><span class="n">01</span><span class="t"><a href="lessons/0001-where-the-heat-goes.html">Where the heat goes: four flows and one store</a><span class="status">ready</span></span><span class="d">Conduction, convection, radiation, ventilation and storage. Writing the room heat balance and sizing each term in watts.</span></li>
   <li><span class="n">02</span><span class="t">How deep the daily wave reaches<span class="status todo">next</span></span><span class="d">Diffusivity, effusivity and penetration depth. Why only the first 100&nbsp;mm or so of concrete works on a daily cycle.</span></li>
@@ -22,7 +23,28 @@
   <li><span class="n">04</span><span class="t">Reading a build-up: ISO 13786 numbers<span class="status todo">planned</span></span><span class="d">Admittance, &kappa;<sub>1</sub>, decrement factor and time lag. What linings, carpets and dabs do.</span></li>
   <li><span class="n">05</span><span class="t">The whole building as a circuit<span class="status todo">planned</span></span><span class="d">Time constant <var>&tau;</var> = <var>C</var>/<var>H</var>, attenuation of swings, preheat and demand flexibility.</span></li>
   <li><span class="n">06</span><span class="t">How models represent mass<span class="status todo">planned</span></span><span class="d">Admittance method, 5R1C, the Home Energy Model's five nodes, finite difference. Where they disagree, and the Roberts et&nbsp;al. test houses.</span></li>
-  <li><span class="n">07</span><span class="t">When mass doesn't help<span class="status todo">planned</span></span><span class="d">Constant setpoints, warm nights, bedrooms, intermittent heating, diminishing returns and embodied carbon.</span></li>
+  <li><span class="n">07</span><span class="t">When mass doesn't help<span class="status todo">planned</span></span><span class="d">Constant setpoints, warm nights, bedrooms, intermittent heating, and the physics of diminishing returns.</span></li>
+</ol>
+
+<h2>Part B &middot; Practice</h2>
+<ol class="map">
+  <li><span class="n">08</span><span class="t">Estimating a summer peak by hand<span class="status todo">planned</span></span><span class="d">The CIBSE cyclic (admittance) method: mean plus swing, for a room you could be asked about tomorrow.</span></li>
+  <li><span class="n">09</span><span class="t">Designing the night purge<span class="status todo">planned</span></span><span class="d">Airflow, surface coupling and night temperatures. Sizing openings so the mass actually discharges.</span></li>
+  <li><span class="n">10</span><span class="t">Heating, intermittency and preheat<span class="status todo">planned</span></span><span class="d">When mass saves heating energy, when it costs it, and gain utilisation.</span></li>
+  <li><span class="n">11</span><span class="t">Mass as a battery: demand flexibility<span class="status todo">planned</span></span><span class="d">How long a heat pump can switch off, and what sets the answer.</span></li>
+  <li><span class="n">12</span><span class="t">Reading overheating results<span class="status todo">planned</span></span><span class="d">TM52, TM59, Approved Document O and weather files. Which inputs move the answer most.</span></li>
+  <li><span class="n">13</span><span class="t">Judging claims about mass<span class="status todo">planned</span></span><span class="d">Case studies, the diminishing-returns literature and embodied carbon. Spotting a benefit that won't happen.</span></li>
+</ol>
+
+<h2>Part C &middot; Building the models</h2>
+<ol class="map">
+  <li><span class="n">14</span><span class="t">Deriving the heat equation<span class="status todo">planned</span></span><span class="d">From Fourier's law and energy conservation to the periodic solution and penetration depth.</span></li>
+  <li><span class="n">15</span><span class="t">A finite-difference wall in code<span class="status todo">planned</span></span><span class="d">Write one in Python, find its stability limit, and check it against the analytical solution.</span></li>
+  <li><span class="n">16</span><span class="t">The ISO 13786 transfer matrix<span class="status todo">planned</span></span><span class="d">Derive it, code it, and match ISO 13786 Annex D exactly.</span></li>
+  <li><span class="n">17</span><span class="t">RC networks from 1R1C to 5R1C<span class="status todo">planned</span></span><span class="d">Build a zone model, run it on real weather, and see what each node buys you.</span></li>
+  <li><span class="n">18</span><span class="t">Lumping errors: ISO 52016 and HEM<span class="status todo">planned</span></span><span class="d">Five-node elements against the exact solution, and why linings and timber come out wrong.</span></li>
+  <li><span class="n">19</span><span class="t">Inside whole-building simulation<span class="status todo">planned</span></span><span class="d">Conduction transfer functions, convection algorithms, solar distribution and furniture.</span></li>
+  <li><span class="n">20</span><span class="t">Validation and calibration<span class="status todo">planned</span></span><span class="d">BESTEST, test houses and grey-box identification: how to know a model is right.</span></li>
 </ol>
 
 <h2>Reference sheets</h2>

@@ -7,4 +7,5 @@
 - The course is published as one Artifact with index.html as the page and lessons, reference and assets as supporting files. Republish the whole folder when a lesson is added.
 - The thread environment can't fetch web pages (search only). Check facts against the project's physics note and models, which have been verified.
 - Worked example used across lessons: 6 x 5 x 2.7 m office (30 m2, 81 m3) with exposed 200 mm concrete soffit. Keep reusing it so numbers build on each other.
+- Mission confirmed 2026-10-23: all three (physics, practice, modelling), 20 lessons in Parts A-C; Part A before ReMass.
 - Course spine: capacity, access, swing (three conditions for mass to work).
