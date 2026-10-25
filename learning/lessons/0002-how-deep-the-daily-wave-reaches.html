@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>The Daily Thermal Wave</title>
+<link rel="stylesheet" href="../assets/course.css">
+<script src="../assets/quiz.js" defer></script>
+<script src="../assets/calc.js" defer></script>
+<script src="../assets/wave.js" defer></script>
+</head>
+<body>
+<main class="page">
+
+<nav class="crumbs" aria-label="Course">
+  <a href="../index.html">Thermal mass and building physics</a>
+  <span>Part A &middot; Lesson 2 of 20 &middot; about 20 minutes</span>
+</nav>
+
+<p class="eyebrow">Lesson 2 &middot; Access, part one</p>
+<h1>How deep the daily wave reaches</h1>
+<p class="lede">By the end you can work out, for any material and any period, how deep a temperature swing gets into it. That one number tells you how thick a layer is worth having, and why a heatwave uses mass that an ordinary day doesn't.</p>
+
+<h2>First, from lesson 1</h2>
+<p>Answer from memory, without looking back. Recalling it now, two days later, is what fixes it.</p>
+<div class="practice">
+<p class="score"></p>
+<div class="q" data-answer="2">
+  <p class="q-stem">What is the storage term in the room heat balance?</p>
+  <ol class="q-options">
+    <li><var>H</var> times the temperature difference</li>
+    <li><var>C</var> times the rate of change</li>
+    <li><var>U</var> times the area and difference</li>
+    <li><var>h</var> times the surface difference</li>
+  </ol>
+  <div class="q-why"><var>C</var>&thinsp;d<var>&theta;</var>/d<var>t</var>. No change in temperature, no storage.</div>
+</div>
+<div class="q" data-answer="3">
+  <p class="q-stem">With windows open at night in a well-insulated office, which two flows set how fast the slab cools?</p>
+  <ol class="q-options">
+    <li>Wall conduction and solar gain</li>
+    <li>Solar gain and surface exchange</li>
+    <li>Surface exchange and ventilation</li>
+    <li>Ventilation and wall conduction</li>
+  </ol>
+  <div class="q-why">Heat leaves the slab through its surface film (about 690&nbsp;W in the lesson&nbsp;1 office) and leaves the room with the air (about 640&nbsp;W). The wall carried only 20&nbsp;W.</div>
+</div>
+</div>
+
+<h2>A wave that dies as it goes in</h2>
+<p>In lesson&nbsp;1 we assumed the top 100&nbsp;mm of the soffit warmed evenly by 2&nbsp;K and the rest stayed put. Reality is smoother. The surface swings up and down once a day. That swing travels into the slab as a wave, and the wave shrinks and falls behind as it goes deeper.</p>
+<p>The reason is how diffusion scales. Heat spreading through a solid covers a distance that grows with the <em>square root</em> of time, not with time itself. In a day, heat gets only so far before the surface has turned round and started pulling it back out<span class="sn">This square-root scaling falls out of the heat diffusion equation. You'll derive it in lesson&nbsp;14. Carslaw &amp; Jaeger, <em>Conduction of Heat in Solids</em> (1959), chapter&nbsp;2, gives the periodic solution used here.</span>.</p>
+
+<p>For a thick solid whose surface swings by &plusmn;<var>&theta;&#770;</var> with period <var>T</var>, the temperature at depth <var>x</var> is:</p>
+<div class="eq">
+  <div class="f"><var>&theta;</var>(<var>x</var>,<var>t</var>) = <var>&theta;&#770;</var> e<sup>&minus;<var>x</var>/<var>&delta;</var></sup> cos(<var>&omega;t</var> &minus; <var>x</var>/<var>&delta;</var>)</div>
+  <div class="tag">K</div>
+  <div class="where"><var>&omega;</var> = 2&pi;/<var>T</var>. The e<sup>&minus;<var>x</var>/<var>&delta;</var></sup> part shrinks the swing; the &minus;<var>x</var>/<var>&delta;</var> inside the cosine delays it.</div>
+</div>
+<p>Everything hangs on one length, the <strong>penetration depth</strong>:</p>
+<div class="eq">
+  <div class="f"><var>&delta;</var> = <span class="frac"><span>&radic;(<var>&lambda;T</var>)</span><span>&radic;(&pi;<var>&rho;c</var>)</span></span> = &radic;(<var>&alpha;T</var>/&pi;), &nbsp;&nbsp; <var>&alpha;</var> = <var>&lambda;</var>/<var>&rho;c</var></div>
+  <div class="tag">m</div>
+  <div class="where"><var>T</var> in seconds: 86,400 for a day. <var>&alpha;</var> is the thermal diffusivity, m&sup2;/s: how fast a temperature change spreads.</div>
+</div>
+
+<div class="key">
+  <span class="label">The idea to keep</span>
+  <p>At one penetration depth the swing is down to 37% and arrives 3.8&nbsp;hours late on a daily cycle. At three, it is down to 5%. Below about 3<var>&delta;</var>, the material might as well not be there for that cycle.</p>
+</div>
+
+<p>Try it. Change the material and the period, and drag the time slider to watch the wave move in. The dashed lines are the envelope e<sup>&minus;<var>x</var>/<var>&delta;</var></sup>; the red line is the temperature right now.</p>
+
+<div class="wave wide" data-material="dense concrete" data-period="24" style="max-width: var(--col)"></div>
+
+<p>Things to notice. Dense concrete on a daily cycle: <var>&delta;</var> &asymp; 150&nbsp;mm. CLT: about 70&nbsp;mm. Switch to <em>7 days</em> and concrete's <var>&delta;</var> grows to about 400&nbsp;mm, because <var>&delta;</var> grows with &radic;<var>T</var>. A week-long heatwave reaches mass that a single day never touches<span class="sn">These values match the table in the project's <a href="https://github.com/gwilma/thermal_mass_in_buildings/blob/claude/project-thread-3p2pw2/physics/thermal-mass-physics.md">physics note</a>, section 3.2, which was checked against a finite-difference simulation.</span>.</p>
+
+<h2>The trap: mineral wool</h2>
+<p>Now pick <em>mineral wool</em>. Its penetration depth on a daily cycle is about 175&nbsp;mm, deeper than concrete's. Yet nobody counts insulation as thermal mass. What's going on?</p>
+<p>Diffusivity says how <em>far</em> a change spreads, not how much <em>heat</em> moves. Mineral wool has almost no heat capacity to fill, so the wave runs in fast and carries almost nothing. The property that measures how much heat a surface takes in for a given swing is the <strong>thermal effusivity</strong><span class="sn">Effusivity is why a concrete floor feels cold underfoot and a carpet doesn't, at the same temperature. The concrete draws heat from your foot faster.</span>:</p>
+<div class="eq">
+  <div class="f"><var>b</var> = &radic;(<var>&lambda;&rho;c</var>), &nbsp;&nbsp; <var>q&#770;</var><sub>s</sub> = <var>b</var>&radic;<var>&omega;</var>&thinsp;<var>&theta;&#770;</var><sub>s</sub></div>
+  <div class="tag">J/m&sup2;K s<sup>&frac12;</sup></div>
+  <div class="where"><var>q&#770;</var><sub>s</sub> is the amplitude of heat flux into the surface for a surface swing <var>&theta;&#770;</var><sub>s</sub>. Concrete: <var>b</var> &asymp; 2,190. Mineral wool: about 33.</div>
+</div>
+<p>So you need two properties, not one. <strong>Diffusivity</strong> sets how deep the wave goes. <strong>Effusivity</strong> sets how much heat it carries. Good thermal mass is high in both: dense concrete, block, brick, rammed earth.</p>
+
+<h2>What this means for thickness</h2>
+<p>For a layer backed by insulation, the useful storage on a daily cycle rises with thickness up to about 0.7 to 1&nbsp;<var>&delta;</var>, then levels off and even dips slightly as the wave reflects off the insulation. For dense concrete the peak is at about 100 to 110&nbsp;mm, and 90% of the peak comes from the first 55&nbsp;mm or so. For CLT the peak is near 75&nbsp;mm<span class="sn">Calculated with the project's EN ISO 13786 calculator (<span class="mono">physics/iso13786.py</span>, which matches the standard's Annex&nbsp;D test case exactly) for a layer on 100&nbsp;mm PIR with <var>R</var><sub>si</sub>&nbsp;=&nbsp;0.13. Lesson&nbsp;4 shows how.</span>. That is where the "first 100&nbsp;mm" rule comes from, and it is a daily-cycle rule. Over a heatwave, the deeper mass joins in.</p>
+
+<h2>Practice</h2>
+<p>Use the calculator in the sidebar (the Calculator button on a phone). <var>T</var> = 86,400&nbsp;s for a day.</p>
+
+<div class="practice">
+<span class="label">Exercise 1 &middot; penetration depth</span>
+<div class="calc" id="l2ex1" data-answer="125" data-tol="0.04" data-unit="mm">
+  <p>Brick: <var>&lambda;</var> = 0.77&nbsp;W/mK, <var>&rho;</var> = 1,700&nbsp;kg/m&sup3;, <var>c</var> = 800&nbsp;J/kgK. What is its penetration depth on a daily cycle, in mm?</p>
+  <div class="working"><p><var>&delta;</var> = &radic;(0.77 &times; 86,400 &divide; (&pi; &times; 1,700 &times; 800)) = &radic;0.01557 = 0.125&nbsp;m = <strong>125&nbsp;mm</strong>. In the calculator: <span class="mono">sqrt(0.77*86400/(pi*1700*800))*1000</span>.</p></div>
+</div>
+</div>
+
+<div class="practice">
+<span class="label">Exercise 2 &middot; scaling with period</span>
+<div class="calc" id="l2ex2" data-answer="400" data-tol="0.04" data-unit="mm">
+  <p>Dense concrete has <var>&delta;</var> = 151&nbsp;mm on a 24-hour cycle. Without the full formula, what is it on a 7-day cycle?</p>
+  <div class="working"><p><var>&delta;</var> grows with &radic;<var>T</var>. Seven times the period gives &radic;7 = 2.65 times the depth: 151 &times; 2.65 = <strong>400&nbsp;mm</strong>.</p></div>
+</div>
+</div>
+
+<div class="practice">
+<span class="label">Exercise 3 &middot; the swing inside</span>
+<div class="calc" id="l2ex3" data-answer="1.03" data-tol="0.04" data-unit="K">
+  <p>The soffit surface swings &plusmn;2&nbsp;K over the day. How big is the swing 100&nbsp;mm into the concrete (<var>&delta;</var> = 151&nbsp;mm)?</p>
+  <div class="working"><p>2 &times; e<sup>&minus;100/151</sup> = 2 &times; 0.516 = <strong>&plusmn;1.03&nbsp;K</strong>, about half the surface swing. It also arrives (100/151) &times; 24/(2&pi;) = 2.5&nbsp;hours late. So in lesson&nbsp;1, "the top 100&nbsp;mm warms by 2&nbsp;K" overstated the storage. Lesson&nbsp;4 gives the exact figure.</p></div>
+</div>
+</div>
+
+<div class="practice">
+<span class="label">Exercise 4 &middot; effusivity</span>
+<div class="calc" id="l2ex4" data-answer="18.7" data-tol="0.04" data-unit="W/m²K">
+  <p>For thick dense concrete (<var>b</var> = 2,190) on a daily cycle, how much heat flux goes into the surface per kelvin of surface swing? That is, <var>b</var>&radic;<var>&omega;</var>.</p>
+  <div class="working"><p><var>&omega;</var> = 2&pi;/86,400 = 7.27&times;10<sup>&minus;5</sup>&nbsp;rad/s, so &radic;<var>&omega;</var> = 0.00853 and <var>b</var>&radic;<var>&omega;</var> = <strong>18.7&nbsp;W/m&sup2;K</strong>. Compare 1/<var>R</var><sub>si</sub> = 7.7&nbsp;W/m&sup2;K from lesson&nbsp;1. The concrete could take heat more than twice as fast as the air film can deliver it. That mismatch is lesson&nbsp;3.</p></div>
+</div>
+</div>
+
+<h2>Check your recall</h2>
+<div class="practice">
+<div class="q" data-answer="3">
+  <p class="q-stem">How does penetration depth change with the period of the swing?</p>
+  <ol class="q-options">
+    <li>In proportion to the period</li>
+    <li>With the period squared</li>
+    <li>With the square root of period</li>
+    <li>It does not depend on period</li>
+  </ol>
+  <div class="q-why"><var>&delta;</var> = &radic;(<var>&alpha;T</var>/&pi;). Four times the period, twice the depth.</div>
+</div>
+<div class="q" data-answer="1">
+  <p class="q-stem">Mineral wool has a larger penetration depth than concrete. Why is it still useless as thermal mass?</p>
+  <ol class="q-options">
+    <li>Its effusivity is tiny</li>
+    <li>Its diffusivity is tiny</li>
+    <li>Its conductivity is huge</li>
+    <li>Its density is huge</li>
+  </ol>
+  <div class="q-why">With almost no heat capacity, <var>b</var> = &radic;(<var>&lambda;&rho;c</var>) is about 33 against concrete's 2,190. The wave goes deep but carries almost no heat.</div>
+</div>
+<div class="q" data-answer="4">
+  <p class="q-stem">On a daily cycle, roughly how much of the surface swing is left at three penetration depths?</p>
+  <ol class="q-options">
+    <li>About 37 percent</li>
+    <li>About 50 percent</li>
+    <li>About 14 percent</li>
+    <li>About 5 percent</li>
+  </ol>
+  <div class="q-why">e<sup>&minus;3</sup> = 0.05. At one depth it is e<sup>&minus;1</sup> = 37%.</div>
+</div>
+<div class="q" data-answer="2">
+  <p class="q-stem">Why does a week-long heatwave use deeper mass than a single hot day?</p>
+  <ol class="q-options">
+    <li>The surface gets much hotter</li>
+    <li>The longer period reaches deeper</li>
+    <li>The concrete's diffusivity rises</li>
+    <li>The air film gets much thinner</li>
+  </ol>
+  <div class="q-why">Penetration depth grows with &radic;<var>T</var>: about 150&nbsp;mm for a day and 400&nbsp;mm for a week in dense concrete.</div>
+</div>
+</div>
+
+<div class="source">
+  <span class="label">Primary source for this lesson</span>
+  <span class="title">Carslaw &amp; Jaeger, <em>Conduction of Heat in Solids</em>, 2nd ed. (1959), chapter&nbsp;2</span>
+  <span>The classic text. Chapter&nbsp;2 solves the semi-infinite solid, including the periodic surface temperature behind every formula on this page. It is dense; read the periodic case and skip the rest. For a gentler route through the same maths, use the transient conduction chapter of Lienhard &amp; Lienhard, <a href="https://ahtt.mit.edu/"><em>A Heat Transfer Textbook</em></a> (free).</span>
+</div>
+
+<div class="ask">
+  <span class="label">Ask me</span>
+  <p>Anything unclear, or something you'd want to argue with? Reply in the thread. I can rework an explanation, add more practice, or go deeper. Tell me how the exercises went, too, so I can pitch lesson&nbsp;3.</p>
+</div>
+
+<h2>References</h2>
+<ol class="refs">
+  <li>Carslaw, H.S. &amp; Jaeger, J.C. (1959). <em>Conduction of Heat in Solids</em>, 2nd ed. Oxford University Press.</li>
+  <li>Lienhard, J.H. IV &amp; Lienhard, J.H. V (2024). <em>A Heat Transfer Textbook</em>, 6th ed. <a href="https://ahtt.mit.edu/">ahtt.mit.edu</a></li>
+  <li>EN ISO 13786:2017. <em>Thermal performance of building components: dynamic thermal characteristics: calculation methods.</em> Periodic penetration depth is defined in the standard.</li>
+  <li>Project note: <a href="https://github.com/gwilma/thermal_mass_in_buildings/blob/claude/project-thread-3p2pw2/physics/thermal-mass-physics.md">The physics of thermal mass in operation</a>, sections 3.1, 3.2 and 4.1.</li>
+</ol>
+
+<nav class="pager">
+  <a href="0001-where-the-heat-goes.html">&larr; Lesson 1</a>
+  <a href="../reference/thermal-wave.html">Reference sheet: the thermal wave &rarr;</a>
+</nav>
+
+</main>
+</body>
+</html>

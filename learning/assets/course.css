@@ -229,6 +229,20 @@ details.recall[open] summary { margin-bottom: 0.5rem; }
 .map .status.todo { color: var(--muted); }
 
 
+/* ---- thermal wave explorer (driven by wave.js) ---- */
+.wave { border: 1px solid var(--rule); border-radius: 6px; padding: 1rem 1.1rem; margin: 1.4rem 0; }
+.wave-controls { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; align-items: center; font-family: var(--label); font-size: var(--step--1); color: var(--muted); }
+.wave-controls label { display: flex; gap: 0.4rem; align-items: center; }
+.wave-controls select { font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--muted); border-radius: 4px; padding: 0.25rem 0.4rem; }
+.wave-time { flex: 1 1 14rem; }
+.wave-time input { flex: 1; min-width: 0; accent-color: var(--heat); }
+.wave-plot svg { width: 100%; height: auto; display: block; margin: 0.6rem 0; }
+.wave-read { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: 0.5rem 1rem; margin: 0; }
+.wave-read div { border-top: 1px solid var(--rule); padding-top: 0.3rem; }
+.wave-read dt { font-family: var(--label); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.wave-read dt var { text-transform: none; font-size: 1.1em; }
+.wave-read dd { margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
 /* ---- sidebar calculator (driven by calc.js) ---- */
 .calcpad {
   position: fixed; z-index: 20; display: none; flex-direction: column; gap: 0.55rem;

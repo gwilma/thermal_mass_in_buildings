@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Thermal Wave Sheet</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="page">
+
+<nav class="crumbs" aria-label="Course">
+  <a href="../index.html">Thermal mass and building physics</a>
+  <span>Reference &middot; from lesson 2</span>
+</nav>
+
+<p class="eyebrow">Reference sheet</p>
+<h1>The thermal wave</h1>
+<p class="lede">How far a periodic swing gets into a material, and how much heat it carries.</p>
+
+<h2>Formulae</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Quantity</th><th>Formula</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>Diffusivity</td><td><var>&alpha;</var> = <var>&lambda;</var>/<var>&rho;c</var>, m&sup2;/s</td><td>How fast a temperature change spreads</td></tr>
+    <tr><td>Effusivity</td><td><var>b</var> = &radic;(<var>&lambda;&rho;c</var>), J/m&sup2;K&thinsp;s<sup>&frac12;</sup></td><td>How much heat a surface takes for a given swing</td></tr>
+    <tr><td>Penetration depth</td><td><var>&delta;</var> = &radic;(<var>&lambda;T</var>/&pi;<var>&rho;c</var>) = &radic;(<var>&alpha;T</var>/&pi;)</td><td>Depth where the swing is down to 1/e</td></tr>
+    <tr><td>Wave in a thick solid</td><td><var>&theta;</var> = <var>&theta;&#770;</var>e<sup>&minus;<var>x</var>/<var>&delta;</var></sup>cos(<var>&omega;t</var> &minus; <var>x</var>/<var>&delta;</var>)</td><td>Shrinks and lags with depth</td></tr>
+    <tr><td>Delay at depth <var>x</var></td><td>(<var>x</var>/<var>&delta;</var>)&thinsp;&middot;&thinsp;<var>T</var>/2&pi;</td><td>3.8&nbsp;h per <var>&delta;</var> on a daily cycle</td></tr>
+    <tr><td>Surface flux, no air film</td><td><var>q&#770;</var><sub>s</sub> = <var>b</var>&radic;<var>&omega;</var>&thinsp;<var>&theta;&#770;</var><sub>s</sub>, &nbsp;<var>&omega;</var> = 2&pi;/<var>T</var></td><td>18.7&nbsp;W/m&sup2;K for concrete, daily</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Material values</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Material</th><th class="r">&alpha; mm&sup2;/s</th><th class="r">b</th><th class="r">&delta; 1 h</th><th class="r">&delta; 24 h</th><th class="r">&delta; 7 d</th></tr></thead>
+  <tbody>
+    <tr><td>Dense concrete</td><td class="r">0.83</td><td class="r">2190</td><td class="r">31</td><td class="r">151</td><td class="r">401</td></tr>
+    <tr><td>Brick</td><td class="r">0.57</td><td class="r">1020</td><td class="r">25</td><td class="r">125</td><td class="r">330</td></tr>
+    <tr><td>Dense block</td><td class="r">0.56</td><td class="r">1500</td><td class="r">25</td><td class="r">125</td><td class="r">330</td></tr>
+    <tr><td>Rammed earth</td><td class="r">0.58</td><td class="r">1310</td><td class="r">26</td><td class="r">127</td><td class="r">336</td></tr>
+    <tr><td>Aerated block</td><td class="r">0.25</td><td class="r">300</td><td class="r">17</td><td class="r">83</td><td class="r">219</td></tr>
+    <tr><td>Plasterboard</td><td class="r">0.30</td><td class="r">380</td><td class="r">19</td><td class="r">91</td><td class="r">240</td></tr>
+    <tr><td>CLT (softwood)</td><td class="r">0.17</td><td class="r">310</td><td class="r">14</td><td class="r">69</td><td class="r">182</td></tr>
+    <tr><td>Mineral wool</td><td class="r">1.13</td><td class="r">33</td><td class="r">36</td><td class="r">176</td><td class="r">467</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="sn" style="float:none;width:auto;margin:0">Depths in mm. Typical book values, as in the project's ISO 13786 calculator.</p>
+
+<h2>Rules of thumb</h2>
+<ul>
+  <li>At 1&nbsp;<var>&delta;</var>: 37% of the swing, 3.8&nbsp;h late (daily). At 3&nbsp;<var>&delta;</var>: 5%.</li>
+  <li><var>&delta;</var> grows with &radic;<var>T</var>: a week reaches 2.65 times deeper than a day.</li>
+  <li>Good mass needs high <var>&alpha;</var> <em>and</em> high <var>b</var>. Insulation has high <var>&alpha;</var> but negligible <var>b</var>.</li>
+  <li>Insulation-backed layer, daily cycle: storage peaks at about 0.7&ndash;1&nbsp;<var>&delta;</var> (dense concrete 100&ndash;110&nbsp;mm, 90% by about 55&nbsp;mm; CLT about 75&nbsp;mm).</li>
+  <li>Thick concrete could take 18.7&nbsp;W/m&sup2;K, but the air film allows only 7.7. The surface is the bottleneck.</li>
+</ul>
+
+<nav class="pager">
+  <a href="../lessons/0002-how-deep-the-daily-wave-reaches.html">&larr; Lesson 2</a>
+  <a href="../index.html">Course map &rarr;</a>
+</nav>
+</main>
+</body>
+</html>
