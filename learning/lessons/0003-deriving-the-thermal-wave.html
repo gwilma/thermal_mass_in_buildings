@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Deriving the Thermal Wave</title>
+<link rel="stylesheet" href="../assets/course.css">
+<script src="../assets/quiz.js" defer></script>
+<script src="../assets/calc.js" defer></script>
+</head>
+<body>
+<main class="page">
+
+<nav class="crumbs" aria-label="Course">
+  <a href="../index.html">Thermal mass and building physics</a>
+  <span>Part A &middot; Lesson 3 of 20 &middot; about 30 minutes</span>
+</nav>
+
+<p class="eyebrow">Lesson 3 &middot; Derivation</p>
+<h1>Deriving the thermal wave</h1>
+<p class="lede">Lesson&nbsp;2 handed you the wave formula, the penetration depth and the effusivity. Here you derive all three from two physical facts: energy is conserved, and heat flows down a temperature gradient. Nothing on this page is taken on trust.</p>
+
+<p>You need partial derivatives and the complex exponential e<sup><var>i&phi;</var></sup> = cos&thinsp;<var>&phi;</var> + <var>i</var>&thinsp;sin&thinsp;<var>&phi;</var>. Each step has a prompt: try the step yourself on paper before opening it. Working it out first is what makes it stick.</p>
+
+<h2>Step 1 &middot; Energy balance on a thin slice</h2>
+<p>Take a slab, and look at a thin slice of it between depth <var>x</var> and <var>x</var> + d<var>x</var>, with face area <var>A</var>. Heat flux <var>q</var>(<var>x</var>) flows in through one face and <var>q</var>(<var>x</var>+d<var>x</var>) flows out through the other. Whatever doesn't come out stays in the slice and warms it.</p>
+
+<figure>
+<svg viewBox="0 0 560 170" role="img" aria-labelledby="slicet">
+  <title id="slicet">A slice of thickness dx, with heat flux q(x) entering on the left and q(x+dx) leaving on the right</title>
+  <defs>
+    <marker id="sh" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="dg-fill-heat"/></marker>
+  </defs>
+  <rect x="40" y="30" width="480" height="100" class="dg-panel"/>
+  <rect x="230" y="30" width="100" height="100" class="dg-paper"/>
+  <rect x="230" y="30" width="100" height="100" class="dg-ink" stroke-width="1.5"/>
+  <line x1="40" y1="30" x2="40" y2="130" class="dg-ink" stroke-width="2.5"/>
+  <text x="46" y="22" class="dg-small">surface, x = 0</text>
+  <line x1="150" y1="80" x2="226" y2="80" class="dg-heat" stroke-width="2.2" marker-end="url(#sh)"/>
+  <text x="150" y="70" class="dg-text-heat">q(x)</text>
+  <line x1="334" y1="80" x2="410" y2="80" class="dg-heat" stroke-width="2.2" marker-end="url(#sh)"/>
+  <text x="340" y="70" class="dg-text-heat">q(x + dx)</text>
+  <text x="280" y="86" class="dg-text" text-anchor="middle">ρc A dx</text>
+  <line x1="230" y1="146" x2="330" y2="146" class="dg-muted"/>
+  <line x1="230" y1="140" x2="230" y2="152" class="dg-muted"/><line x1="330" y1="140" x2="330" y2="152" class="dg-muted"/>
+  <text x="280" y="164" class="dg-small" text-anchor="middle">dx</text>
+  <text x="500" y="160" class="dg-small" text-anchor="end">depth x →</text>
+</svg>
+<figcaption>The slice stores heat at rate <var>&rho;c A</var>&thinsp;d<var>x</var>&thinsp;&part;<var>&theta;</var>/&part;<var>t</var>: its heat capacity times how fast its temperature rises.</figcaption>
+</figure>
+
+<details class="recall">
+  <summary>Try it: write the energy balance for the slice, then let d<var>x</var> shrink to zero.</summary>
+  <div class="eq">
+    <div class="f"><var>&rho;c A</var>&thinsp;d<var>x</var>&thinsp;<span class="frac"><span>&part;<var>&theta;</var></span><span>&part;<var>t</var></span></span> = <var>A</var>&thinsp;[<var>q</var>(<var>x</var>) &minus; <var>q</var>(<var>x</var>+d<var>x</var>)] &nbsp;&nbsp;&rArr;&nbsp;&nbsp; <var>&rho;c</var>&thinsp;<span class="frac"><span>&part;<var>&theta;</var></span><span>&part;<var>t</var></span></span> = &minus;<span class="frac"><span>&part;<var>q</var></span><span>&part;<var>x</var></span></span></div>
+    <div class="tag">(1)</div>
+    <div class="where">Divide by <var>A</var>&thinsp;d<var>x</var>; as d<var>x</var> &rarr; 0, [<var>q</var>(<var>x</var>+d<var>x</var>) &minus; <var>q</var>(<var>x</var>)]/d<var>x</var> becomes &part;<var>q</var>/&part;<var>x</var>. In words: a slice warms when more heat enters than leaves.</div>
+  </div>
+</details>
+
+<h2>Step 2 &middot; Add Fourier's law</h2>
+<p>Lesson&nbsp;1's conduction law, written for a point rather than a whole layer, says heat flows down the gradient: <var>q</var> = &minus;<var>&lambda;</var>&thinsp;&part;<var>&theta;</var>/&part;<var>x</var>.</p>
+
+<details class="recall">
+  <summary>Try it: substitute this into equation (1), assuming <var>&lambda;</var> doesn't vary with depth.</summary>
+  <div class="eq">
+    <div class="f"><var>&rho;c</var>&thinsp;<span class="frac"><span>&part;<var>&theta;</var></span><span>&part;<var>t</var></span></span> = <var>&lambda;</var>&thinsp;<span class="frac"><span>&part;&sup2;<var>&theta;</var></span><span>&part;<var>x</var>&sup2;</span></span> &nbsp;&nbsp;&rArr;&nbsp;&nbsp; <span class="frac"><span>&part;<var>&theta;</var></span><span>&part;<var>t</var></span></span> = <var>&alpha;</var>&thinsp;<span class="frac"><span>&part;&sup2;<var>&theta;</var></span><span>&part;<var>x</var>&sup2;</span></span>, &nbsp; <var>&alpha;</var> = <span class="frac"><span><var>&lambda;</var></span><span><var>&rho;c</var></span></span></div>
+    <div class="tag">(2)</div>
+    <div class="where">This is the <strong>heat diffusion equation</strong>. Temperature rises where the profile curves upwards (&part;&sup2;<var>&theta;</var>/&part;<var>x</var>&sup2; &gt; 0), because more heat flows in from the warmer side than leaves on the cooler side. Diffusivity <var>&alpha;</var> appears naturally as the one material property that sets the pace.</div>
+  </div>
+</details>
+
+<h2>Step 3 &middot; Why the square root of time</h2>
+<p>Before solving anything, look at the units. <var>&alpha;</var> is in m&sup2;/s. If the only things in the problem are <var>&alpha;</var> and a time <var>t</var>, the only length you can build from them is &radic;(<var>&alpha;t</var>). So whatever the exact answer, the distance heat reaches must scale as &radic;(<var>&alpha;t</var>). Four times the time, twice the depth<span class="sn">This kind of argument is dimensional analysis. It gives the scaling but not the constant in front, which is why the full solution is still needed.</span>.</p>
+
+<h2>Step 4 &middot; Set up the periodic problem</h2>
+<p>Now the building case. The surface (<var>x</var> = 0) swings as <var>&theta;</var>(0,<var>t</var>) = <var class="hat">&theta;</var>&thinsp;cos&thinsp;<var>&omega;t</var>, with <var>&omega;</var> = 2&pi;/<var>T</var>, and it has been doing so long enough that start-up effects have died away. The slab is thick enough to treat as going on for ever.</p>
+<p>The trick is to write the cosine as the real part of a complex exponential, cos&thinsp;<var>&omega;t</var> = Re(e<sup><var>i&omega;t</var></sup>), and look for a solution where every depth oscillates at the same frequency, just with its own size and timing:</p>
+<div class="eq">
+  <div class="f"><var>&theta;</var>(<var>x</var>,<var>t</var>) = Re[&thinsp;<var>&Theta;</var>(<var>x</var>)&thinsp;e<sup><var>i&omega;t</var></sup>&thinsp;]</div>
+  <div class="tag">(3)</div>
+  <div class="where"><var>&Theta;</var>(<var>x</var>) is a complex amplitude. Its size is the swing at depth <var>x</var>; its angle is the timing.</div>
+</div>
+<p>This works because equation (2) is linear: real and imaginary parts don't mix, so we can solve with the complex form and take the real part at the end.</p>
+
+<details class="recall">
+  <summary>Try it: substitute (3) into (2). What ordinary differential equation does <var>&Theta;</var>(<var>x</var>) satisfy?</summary>
+  <p>The time derivative brings down <var>i&omega;</var>; the space derivative acts only on <var>&Theta;</var>:</p>
+  <div class="eq">
+    <div class="f"><var>i&omega;</var>&thinsp;<var>&Theta;</var> = <var>&alpha;</var>&thinsp;<var>&Theta;</var>&Prime; &nbsp;&nbsp;&rArr;&nbsp;&nbsp; <var>&Theta;</var>&Prime; = <var>k</var>&sup2;<var>&Theta;</var>, &nbsp; <var>k</var>&sup2; = <span class="frac"><span><var>i&omega;</var></span><span><var>&alpha;</var></span></span></div>
+    <div class="tag">(4)</div>
+  </div>
+</details>
+
+<h2>Step 5 &middot; Solve it</h2>
+<p>Equation (4) has solutions <var>&Theta;</var> = <var>A</var>e<sup>&minus;<var>kx</var></sup> + <var>B</var>e<sup>+<var>kx</var></sup>. The only new piece is the square root of <var>i</var>.</p>
+
+<details class="recall">
+  <summary>Try it: what is &radic;<var>i</var>? (Hint: write <var>i</var> = e<sup><var>i</var>&pi;/2</sup>.)</summary>
+  <p>&radic;<var>i</var> = e<sup><var>i</var>&pi;/4</sup> = (1 + <var>i</var>)/&radic;2. So</p>
+  <div class="eq">
+    <div class="f"><var>k</var> = (1 + <var>i</var>)&thinsp;&radic;(<var>&omega;</var>/2<var>&alpha;</var>) = <span class="frac"><span>1 + <var>i</var></span><span><var>&delta;</var></span></span>, &nbsp;&nbsp; <var>&delta;</var> = &radic;(2<var>&alpha;</var>/<var>&omega;</var>) = &radic;(<var>&alpha;T</var>/&pi;)</div>
+    <div class="tag">(5)</div>
+    <div class="where">That is the penetration depth from lesson&nbsp;2, appearing on its own. Substituting <var>&alpha;</var> = <var>&lambda;</var>/<var>&rho;c</var> gives <var>&delta;</var> = &radic;(<var>&lambda;T</var>/&pi;<var>&rho;c</var>).</div>
+  </div>
+</details>
+
+<details class="recall">
+  <summary>Try it: use the two boundary conditions to find <var>A</var> and <var>B</var>.</summary>
+  <p>Deep in the slab the swing can't grow without limit, but e<sup>+<var>kx</var></sup> grows as e<sup><var>x</var>/<var>&delta;</var></sup>. So <var>B</var> = 0. At the surface <var>&Theta;</var>(0) = <var class="hat">&theta;</var>, so <var>A</var> = <var class="hat">&theta;</var>.</p>
+</details>
+
+<details class="recall">
+  <summary>Try it: put it back together and take the real part.</summary>
+  <div class="eq">
+    <div class="f"><var>&theta;</var> = Re[&thinsp;<var class="hat">&theta;</var>&thinsp;e<sup>&minus;<var>x</var>/<var>&delta;</var></sup>&thinsp;e<sup>&minus;<var>ix</var>/<var>&delta;</var></sup>&thinsp;e<sup><var>i&omega;t</var></sup>&thinsp;] = <var class="hat">&theta;</var>&thinsp;e<sup>&minus;<var>x</var>/<var>&delta;</var></sup>&thinsp;cos(<var>&omega;t</var> &minus; <var>x</var>/<var>&delta;</var>)</div>
+    <div class="tag">(6)</div>
+    <div class="where">The real part of <var>k</var> gives the decay, e<sup>&minus;<var>x</var>/<var>&delta;</var></sup>. The imaginary part gives the delay, a phase of <var>x</var>/<var>&delta;</var> radians, which is (<var>x</var>/<var>&delta;</var>)&thinsp;&middot;&thinsp;<var>T</var>/2&pi; in time. Both come from the same (1 + <var>i</var>), which is why decay and delay always go together.</div>
+  </div>
+</details>
+
+<div class="key">
+  <span class="label">The idea to keep</span>
+  <p>The thermal wave is just the heat diffusion equation driven at one frequency. Decay and delay both come from &radic;<var>i</var> = (1 + <var>i</var>)/&radic;2: equal parts real and imaginary, so the swing loses a factor e and a radian of phase over every penetration depth.</p>
+</div>
+
+<h2>Step 6 &middot; The heat flux at the surface</h2>
+<p>Thermal mass is about heat, not temperature, so finish with the flux into the surface. Use Fourier's law at <var>x</var> = 0 on the complex form.</p>
+
+<details class="recall">
+  <summary>Try it: find <var>q</var>(0,<var>t</var>) = &minus;<var>&lambda;</var>&thinsp;&part;<var>&theta;</var>/&part;<var>x</var> at the surface. What is its size, and how is it timed against the surface temperature?</summary>
+  <p>Differentiating <var class="hat">&theta;</var>e<sup>&minus;<var>kx</var></sup> brings down &minus;<var>k</var>, so the complex flux amplitude is <var>&lambda;k</var><var class="hat">&theta;</var> = <var>&lambda;</var>(1 + <var>i</var>)<var class="hat">&theta;</var>/<var>&delta;</var>.</p>
+  <div class="eq">
+    <div class="f">|<var class="hat">q</var><sub>s</sub>| = <span class="frac"><span>&radic;2&thinsp;<var>&lambda;</var></span><span><var>&delta;</var></span></span>&thinsp;<var class="hat">&theta;</var> = <var>&lambda;</var>&radic;(<var>&omega;</var>/<var>&alpha;</var>)&thinsp;<var class="hat">&theta;</var> = &radic;(<var>&lambda;&rho;c</var>)&thinsp;&radic;<var>&omega;</var>&thinsp;<var class="hat">&theta;</var> = <var>b</var>&radic;<var>&omega;</var>&thinsp;<var class="hat">&theta;</var></div>
+    <div class="tag">(7)</div>
+    <div class="where">Effusivity <var>b</var> = &radic;(<var>&lambda;&rho;c</var>) falls out of the algebra; nobody had to invent it. The factor (1 + <var>i</var>) has an angle of 45&deg;, so the flux <em>leads</em> the surface temperature by one eighth of a cycle: 3&nbsp;hours on a daily cycle. Heat goes in fastest while the surface is still warming, not at its peak.</div>
+  </div>
+</details>
+
+<h2>What the derivation assumed</h2>
+<p>Every assumption is a limit you can now name:</p>
+<ul>
+  <li><strong>One dimension.</strong> Heat flows straight in. Fine for walls and slabs away from edges and corners.</li>
+  <li><strong>Constant properties.</strong> <var>&lambda;</var>, <var>&rho;</var> and <var>c</var> don't change with temperature or moisture. Phase change materials break this.</li>
+  <li><strong>A single, steady sinusoid.</strong> Real weather is not a cosine. Because the equation is linear, any repeating pattern can be split into a sum of sinusoids (24&nbsp;h, 12&nbsp;h, 8&nbsp;h&hellip;) and each solved this way. That is what the admittance method does.</li>
+  <li><strong>A semi-infinite solid.</strong> Real layers end, often against insulation. Then <var>B</var> &ne; 0: a reflected wave comes back, which is why storage peaks at about 0.7 to 1&nbsp;<var>&delta;</var> and dips slightly beyond. Keeping both terms for each layer gives the ISO 13786 transfer matrix, which you'll derive in lesson&nbsp;16.</li>
+  <li><strong>Surface temperature imposed.</strong> In a room, the surface temperature isn't given; it depends on the air film. Adding that film is lesson&nbsp;4.</li>
+</ul>
+
+<h2>Practice</h2>
+<p>Use the calculator in the sidebar.</p>
+
+<div class="practice">
+<span class="label">Exercise 1 &middot; penetration depth from &alpha; and &omega;</span>
+<div class="calc" id="l3ex1" data-answer="151" data-tol="0.03" data-unit="mm">
+  <p>Dense concrete has <var>&alpha;</var> = 0.833&nbsp;mm&sup2;/s. Using <var>&delta;</var> = &radic;(2<var>&alpha;</var>/<var>&omega;</var>) with a 24-hour period, what is <var>&delta;</var> in mm?</p>
+  <div class="working"><p><var>&omega;</var> = 2&pi;/86,400 = 7.27&times;10<sup>&minus;5</sup>&nbsp;rad/s. <var>&delta;</var> = &radic;(2 &times; 0.833&times;10<sup>&minus;6</sup> &divide; 7.27&times;10<sup>&minus;5</sup>) = &radic;0.0229 = 0.151&nbsp;m = <strong>151&nbsp;mm</strong>. Calculator: <span class="mono">sqrt(2*0.833e-6/(2pi/86400))*1000</span>.</p></div>
+</div>
+</div>
+
+<div class="practice">
+<span class="label">Exercise 2 &middot; the flux lead</span>
+<div class="calc" id="l3ex2" data-answer="3" data-tol="0.03" data-unit="hours">
+  <p>From equation (7), the surface flux leads the surface temperature by 45&deg;. How many hours is that on a daily cycle?</p>
+  <div class="working"><p>45&deg; is 1/8 of 360&deg;, so 24/8 = <strong>3&nbsp;hours</strong>. The project's physics note quotes the same figure (section 3.2).</p></div>
+</div>
+</div>
+
+<div class="practice">
+<span class="label">Exercise 3 &middot; flux for brick</span>
+<div class="calc" id="l3ex3" data-answer="8.72" data-tol="0.03" data-unit="W/m²K">
+  <p>Brick: <var>&lambda;</var> = 0.77, <var>&rho;</var> = 1,700, <var>c</var> = 800. Using <var>b</var>&radic;<var>&omega;</var>, how much heat flux per kelvin of surface swing does thick brick take on a daily cycle?</p>
+  <div class="working"><p><var>b</var> = &radic;(0.77 &times; 1,700 &times; 800) = 1,023. &radic;<var>&omega;</var> = 0.00853. <var>b</var>&radic;<var>&omega;</var> = <strong>8.72&nbsp;W/m&sup2;K</strong>, under half of concrete's 18.7.</p></div>
+</div>
+</div>
+
+<div class="practice">
+<span class="label">Exercise 4 &middot; check the formula two ways</span>
+<div class="calc" id="l3ex4" data-answer="18.7" data-tol="0.03" data-unit="W/m²K">
+  <p>Equation (7) says <var>b</var>&radic;<var>&omega;</var> also equals &radic;2&thinsp;<var>&lambda;</var>/<var>&delta;</var>. Check it for concrete: <var>&lambda;</var> = 2.0&nbsp;W/mK, <var>&delta;</var> = 0.151&nbsp;m.</p>
+  <div class="working"><p>&radic;2 &times; 2.0 &divide; 0.151 = <strong>18.7&nbsp;W/m&sup2;K</strong>, the same as <var>b</var>&radic;<var>&omega;</var> from lesson&nbsp;2. One reading: the surface flux is what you'd get by conducting across a layer &delta;/&radic;2 thick.</p></div>
+</div>
+</div>
+
+<h2>Check your recall</h2>
+<div class="practice">
+<p class="score"></p>
+<div class="q" data-answer="2">
+  <p class="q-stem">Which two facts does the heat diffusion equation combine?</p>
+  <ol class="q-options">
+    <li>Fourier's law and Newton's cooling law</li>
+    <li>Energy conservation and Fourier's law</li>
+    <li>Energy conservation and Newton's cooling law</li>
+    <li>Fourier's law and the Stefan&ndash;Boltzmann law</li>
+  </ol>
+  <div class="q-why">A slice warms when more heat enters than leaves (conservation), and heat flows down the gradient (Fourier).</div>
+</div>
+<div class="q" data-answer="4">
+  <p class="q-stem">Why is the e<sup>+<var>kx</var></sup> solution thrown away for a thick slab?</p>
+  <ol class="q-options">
+    <li>It breaks the surface condition</li>
+    <li>It has the wrong frequency</li>
+    <li>It has no imaginary part</li>
+    <li>It grows without limit inward</li>
+  </ol>
+  <div class="q-why">Its size grows as e<sup><var>x</var>/<var>&delta;</var></sup>, which is impossible deep in a slab. In a finite layer it is kept, as the reflected wave.</div>
+</div>
+<div class="q" data-answer="1">
+  <p class="q-stem">Where do the decay and the delay of the thermal wave both come from?</p>
+  <ol class="q-options">
+    <li>The square root of <var>i</var></li>
+    <li>The surface air film</li>
+    <li>The slab's finite depth</li>
+    <li>The changing conductivity</li>
+  </ol>
+  <div class="q-why"><var>k</var> = (1 + <var>i</var>)/<var>&delta;</var>. The real part decays the swing and the imaginary part delays it, by equal amounts.</div>
+</div>
+<div class="q" data-answer="3">
+  <p class="q-stem">On a daily cycle, when does heat flow into a thick concrete surface fastest?</p>
+  <ol class="q-options">
+    <li>At the surface temperature peak</li>
+    <li>Three hours after the peak</li>
+    <li>Three hours before the peak</li>
+    <li>Six hours after the peak</li>
+  </ol>
+  <div class="q-why">The flux leads the surface temperature by 45&deg;, which is 3&nbsp;hours on a 24-hour cycle.</div>
+</div>
+</div>
+
+<div class="source">
+  <span class="label">Primary source for this lesson</span>
+  <span class="title">Lienhard &amp; Lienhard, <em>A Heat Transfer Textbook</em>, 6th ed., chapters 2 and 5</span>
+  <span>Free from <a href="https://ahtt.mit.edu/">ahtt.mit.edu</a>. Chapter&nbsp;2 derives the heat diffusion equation the same way as steps 1 and 2. The transient conduction chapter covers the semi-infinite solid. For the periodic solution in full, including finite layers, Carslaw &amp; Jaeger (1959), chapter&nbsp;2, is the standard reference.</span>
+</div>
+
+<div class="ask">
+  <span class="label">Ask me</span>
+  <p>Any step that didn't follow? Tell me which one and I'll expand it. From now on, each lesson derives its results before it uses them.</p>
+</div>
+
+<h2>References</h2>
+<ol class="refs">
+  <li>Lienhard, J.H. IV &amp; Lienhard, J.H. V (2024). <em>A Heat Transfer Textbook</em>, 6th ed. <a href="https://ahtt.mit.edu/">ahtt.mit.edu</a></li>
+  <li>Carslaw, H.S. &amp; Jaeger, J.C. (1959). <em>Conduction of Heat in Solids</em>, 2nd ed. Oxford University Press.</li>
+  <li>Project note: <a href="https://github.com/gwilma/thermal_mass_in_buildings/blob/claude/project-thread-3p2pw2/physics/thermal-mass-physics.md">The physics of thermal mass in operation</a>, sections 2.1, 3.2 and 3.3.</li>
+</ol>
+
+<nav class="pager">
+  <a href="0002-how-deep-the-daily-wave-reaches.html">&larr; Lesson 2</a>
+  <a href="../reference/thermal-wave.html">Reference sheet: the thermal wave &rarr;</a>
+</nav>
+
+</main>
+</body>
+</html>

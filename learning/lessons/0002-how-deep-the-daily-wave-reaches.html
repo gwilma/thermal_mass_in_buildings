@@ -50,11 +50,11 @@
 
 <h2>A wave that dies as it goes in</h2>
 <p>In lesson&nbsp;1 we assumed the top 100&nbsp;mm of the soffit warmed evenly by 2&nbsp;K and the rest stayed put. Reality is smoother. The surface swings up and down once a day. That swing travels into the slab as a wave, and the wave shrinks and falls behind as it goes deeper.</p>
-<p>The reason is how diffusion scales. Heat spreading through a solid covers a distance that grows with the <em>square root</em> of time, not with time itself. In a day, heat gets only so far before the surface has turned round and started pulling it back out<span class="sn">This square-root scaling falls out of the heat diffusion equation. You'll derive it in lesson&nbsp;14. Carslaw &amp; Jaeger, <em>Conduction of Heat in Solids</em> (1959), chapter&nbsp;2, gives the periodic solution used here.</span>.</p>
+<p>The reason is how diffusion scales. Heat spreading through a solid covers a distance that grows with the <em>square root</em> of time, not with time itself. In a day, heat gets only so far before the surface has turned round and started pulling it back out<span class="sn">This square-root scaling falls out of the heat diffusion equation. Lesson&nbsp;3 derives it. Carslaw &amp; Jaeger, <em>Conduction of Heat in Solids</em> (1959), chapter&nbsp;2, gives the periodic solution used here.</span>.</p>
 
-<p>For a thick solid whose surface swings by &plusmn;<var>&theta;&#770;</var> with period <var>T</var>, the temperature at depth <var>x</var> is:</p>
+<p>For a thick solid whose surface swings by &plusmn;<var class="hat">&theta;</var> with period <var>T</var>, the temperature at depth <var>x</var> is:</p>
 <div class="eq">
-  <div class="f"><var>&theta;</var>(<var>x</var>,<var>t</var>) = <var>&theta;&#770;</var> e<sup>&minus;<var>x</var>/<var>&delta;</var></sup> cos(<var>&omega;t</var> &minus; <var>x</var>/<var>&delta;</var>)</div>
+  <div class="f"><var>&theta;</var>(<var>x</var>,<var>t</var>) = <var class="hat">&theta;</var> e<sup>&minus;<var>x</var>/<var>&delta;</var></sup> cos(<var>&omega;t</var> &minus; <var>x</var>/<var>&delta;</var>)</div>
   <div class="tag">K</div>
   <div class="where"><var>&omega;</var> = 2&pi;/<var>T</var>. The e<sup>&minus;<var>x</var>/<var>&delta;</var></sup> part shrinks the swing; the &minus;<var>x</var>/<var>&delta;</var> inside the cosine delays it.</div>
 </div>
@@ -80,14 +80,14 @@
 <p>Now pick <em>mineral wool</em>. Its penetration depth on a daily cycle is about 175&nbsp;mm, deeper than concrete's. Yet nobody counts insulation as thermal mass. What's going on?</p>
 <p>Diffusivity says how <em>far</em> a change spreads, not how much <em>heat</em> moves. Mineral wool has almost no heat capacity to fill, so the wave runs in fast and carries almost nothing. The property that measures how much heat a surface takes in for a given swing is the <strong>thermal effusivity</strong><span class="sn">Effusivity is why a concrete floor feels cold underfoot and a carpet doesn't, at the same temperature. The concrete draws heat from your foot faster.</span>:</p>
 <div class="eq">
-  <div class="f"><var>b</var> = &radic;(<var>&lambda;&rho;c</var>), &nbsp;&nbsp; <var>q&#770;</var><sub>s</sub> = <var>b</var>&radic;<var>&omega;</var>&thinsp;<var>&theta;&#770;</var><sub>s</sub></div>
+  <div class="f"><var>b</var> = &radic;(<var>&lambda;&rho;c</var>), &nbsp;&nbsp; <var class="hat">q</var><sub>s</sub> = <var>b</var>&radic;<var>&omega;</var>&thinsp;<var class="hat">&theta;</var><sub>s</sub></div>
   <div class="tag">J/m&sup2;K s<sup>&frac12;</sup></div>
-  <div class="where"><var>q&#770;</var><sub>s</sub> is the amplitude of heat flux into the surface for a surface swing <var>&theta;&#770;</var><sub>s</sub>. Concrete: <var>b</var> &asymp; 2,190. Mineral wool: about 33.</div>
+  <div class="where"><var class="hat">q</var><sub>s</sub> is the amplitude of heat flux into the surface for a surface swing <var class="hat">&theta;</var><sub>s</sub>. Concrete: <var>b</var> &asymp; 2,190. Mineral wool: about 33.</div>
 </div>
 <p>So you need two properties, not one. <strong>Diffusivity</strong> sets how deep the wave goes. <strong>Effusivity</strong> sets how much heat it carries. Good thermal mass is high in both: dense concrete, block, brick, rammed earth.</p>
 
 <h2>What this means for thickness</h2>
-<p>For a layer backed by insulation, the useful storage on a daily cycle rises with thickness up to about 0.7 to 1&nbsp;<var>&delta;</var>, then levels off and even dips slightly as the wave reflects off the insulation. For dense concrete the peak is at about 100 to 110&nbsp;mm, and 90% of the peak comes from the first 55&nbsp;mm or so. For CLT the peak is near 75&nbsp;mm<span class="sn">Calculated with the project's EN ISO 13786 calculator (<span class="mono">physics/iso13786.py</span>, which matches the standard's Annex&nbsp;D test case exactly) for a layer on 100&nbsp;mm PIR with <var>R</var><sub>si</sub>&nbsp;=&nbsp;0.13. Lesson&nbsp;4 shows how.</span>. That is where the "first 100&nbsp;mm" rule comes from, and it is a daily-cycle rule. Over a heatwave, the deeper mass joins in.</p>
+<p>For a layer backed by insulation, the useful storage on a daily cycle rises with thickness up to about 0.7 to 1&nbsp;<var>&delta;</var>, then levels off and even dips slightly as the wave reflects off the insulation. For dense concrete the peak is at about 100 to 110&nbsp;mm, and 90% of the peak comes from the first 55&nbsp;mm or so. For CLT the peak is near 75&nbsp;mm<span class="sn">Calculated with the project's EN ISO 13786 calculator (<span class="mono">physics/iso13786.py</span>, which matches the standard's Annex&nbsp;D test case exactly) for a layer on 100&nbsp;mm PIR with <var>R</var><sub>si</sub>&nbsp;=&nbsp;0.13. Lesson&nbsp;5 shows how.</span>. That is where the "first 100&nbsp;mm" rule comes from, and it is a daily-cycle rule. Over a heatwave, the deeper mass joins in.</p>
 
 <h2>Practice</h2>
 <p>Use the calculator in the sidebar (the Calculator button on a phone). <var>T</var> = 86,400&nbsp;s for a day.</p>
@@ -112,7 +112,7 @@
 <span class="label">Exercise 3 &middot; the swing inside</span>
 <div class="calc" id="l2ex3" data-answer="1.03" data-tol="0.04" data-unit="K">
   <p>The soffit surface swings &plusmn;2&nbsp;K over the day. How big is the swing 100&nbsp;mm into the concrete (<var>&delta;</var> = 151&nbsp;mm)?</p>
-  <div class="working"><p>2 &times; e<sup>&minus;100/151</sup> = 2 &times; 0.516 = <strong>&plusmn;1.03&nbsp;K</strong>, about half the surface swing. It also arrives (100/151) &times; 24/(2&pi;) = 2.5&nbsp;hours late. So in lesson&nbsp;1, "the top 100&nbsp;mm warms by 2&nbsp;K" overstated the storage. Lesson&nbsp;4 gives the exact figure.</p></div>
+  <div class="working"><p>2 &times; e<sup>&minus;100/151</sup> = 2 &times; 0.516 = <strong>&plusmn;1.03&nbsp;K</strong>, about half the surface swing. It also arrives (100/151) &times; 24/(2&pi;) = 2.5&nbsp;hours late. So in lesson&nbsp;1, "the top 100&nbsp;mm warms by 2&nbsp;K" overstated the storage. Lesson&nbsp;5 gives the exact figure.</p></div>
 </div>
 </div>
 
@@ -120,7 +120,7 @@
 <span class="label">Exercise 4 &middot; effusivity</span>
 <div class="calc" id="l2ex4" data-answer="18.7" data-tol="0.04" data-unit="W/m²K">
   <p>For thick dense concrete (<var>b</var> = 2,190) on a daily cycle, how much heat flux goes into the surface per kelvin of surface swing? That is, <var>b</var>&radic;<var>&omega;</var>.</p>
-  <div class="working"><p><var>&omega;</var> = 2&pi;/86,400 = 7.27&times;10<sup>&minus;5</sup>&nbsp;rad/s, so &radic;<var>&omega;</var> = 0.00853 and <var>b</var>&radic;<var>&omega;</var> = <strong>18.7&nbsp;W/m&sup2;K</strong>. Compare 1/<var>R</var><sub>si</sub> = 7.7&nbsp;W/m&sup2;K from lesson&nbsp;1. The concrete could take heat more than twice as fast as the air film can deliver it. That mismatch is lesson&nbsp;3.</p></div>
+  <div class="working"><p><var>&omega;</var> = 2&pi;/86,400 = 7.27&times;10<sup>&minus;5</sup>&nbsp;rad/s, so &radic;<var>&omega;</var> = 0.00853 and <var>b</var>&radic;<var>&omega;</var> = <strong>18.7&nbsp;W/m&sup2;K</strong>. Compare 1/<var>R</var><sub>si</sub> = 7.7&nbsp;W/m&sup2;K from lesson&nbsp;1. The concrete could take heat more than twice as fast as the air film can deliver it. That mismatch is lesson&nbsp;4.</p></div>
 </div>
 </div>
 
@@ -176,7 +176,7 @@
 
 <div class="ask">
   <span class="label">Ask me</span>
-  <p>Anything unclear, or something you'd want to argue with? Reply in the thread. I can rework an explanation, add more practice, or go deeper. Tell me how the exercises went, too, so I can pitch lesson&nbsp;3.</p>
+  <p>Anything unclear, or something you'd want to argue with? Reply in the thread. I can rework an explanation, add more practice, or go deeper. Tell me how the exercises went, too, so I can pitch lesson&nbsp;4.</p>
 </div>
 
 <h2>References</h2>
@@ -189,7 +189,8 @@
 
 <nav class="pager">
   <a href="0001-where-the-heat-goes.html">&larr; Lesson 1</a>
-  <a href="../reference/thermal-wave.html">Reference sheet: the thermal wave &rarr;</a>
+  <a href="../reference/thermal-wave.html">Reference sheet</a>
+  <a href="0003-deriving-the-thermal-wave.html">Lesson 3: deriving the thermal wave &rarr;</a>
 </nav>
 
 </main>

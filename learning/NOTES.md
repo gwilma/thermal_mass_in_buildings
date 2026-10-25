@@ -9,4 +9,5 @@
 - Worked example used across lessons: 6 x 5 x 2.7 m office (30 m2, 81 m3) with exposed 200 mm concrete soffit. Keep reusing it so numbers build on each other.
 - Mission confirmed 2026-10-23: all three (physics, practice, modelling), 20 lessons in Parts A-C; Part A before ReMass.
 - 2026-10-25: Gwilym finished lesson 1 ("useful") and asked for a calculator in the sidebar for numerical questions. assets/calc.js now docks on wide screens and is a button on narrow ones; include it in every lesson.
+- 2026-10-25: after lesson 2, Gwilym said he would have preferred the full derivation of the heat wave first. Derive results before using them in every lesson; derivation lesson moved from Part C into Part A as lesson 3, course renumbered.
 - Course spine: capacity, access, swing (three conditions for mass to work).
